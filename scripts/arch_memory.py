@@ -16,23 +16,54 @@ EVIDENCE_RE = re.compile(
 TEMPLATES = {
     "README.md": """# Architecture memory
 
-This directory stores the smallest reusable model of how this system behaves.
+This directory stores the reusable model of how this system behaves. It is the workspace memory index, not a task diary.
+
+## Knowledge dependencies
+
+~~~mermaid
+flowchart TB
+    TASK["External task contract<br/>Approved PRD / Tech Design from chat"]
+    SOURCE["Source evidence<br/>Code / config / API / Git / runtime feedback"]
+    INDEX["README.md<br/>Index and task-to-note routing"]
+    RULES["AGENTS.md<br/>Stable read-back and update protocol"]
+    ARCH["ARCHITECTURE.md<br/>Global system model"]
+    STATE["STATE.md<br/>Current understanding and open questions"]
+    FLOW["flows/<name>.md<br/>Optional cross-module lifecycle"]
+    RECORD["Task / PR / operations record"]
+
+    TASK --> INDEX
+    SOURCE --> ARCH
+    SOURCE --> FLOW
+    INDEX --> RULES
+    RULES --> ARCH
+    RULES --> STATE
+    ARCH <--> STATE
+    ARCH <--> FLOW
+    FLOW -. "when the global model changes" .-> STATE
+    RECORD -. "reusable findings only" .-> STATE
+~~~
+
+The arrows show knowledge dependencies and feedback, not a mandatory sequence for every task.
 
 ## Read by task
-- Start with AGENTS.md for the maintenance protocol and re-read triggers.
-- Read ARCHITECTURE.md for the global system model.
-- Read STATE.md for the current understanding and unresolved questions.
-- Read flows/ only for a task that touches that lifecycle.
+- Start with AGENTS.md for the stable maintenance protocol and re-read triggers.
+- Read ARCHITECTURE.md and STATE.md when the task depends on system-level behavior.
+- Read a flow note only when the task touches that lifecycle.
+- For approved-design implementation, use the supplied design contract and the relevant system notes; do not create a duplicate PRD here.
+- For a reported bug, follow the observed behavior through the relevant flow and evidence.
 
 ## Ownership
-AGENTS.md owns the maintenance rules; ARCHITECTURE.md owns global structure; STATE.md owns current understanding; each flow note owns its local lifecycle. Keep one authoritative home for each claim.
-
-## Evidence
-Important implementation claims should cite repository-relative source paths and exact symbols using the Evidence convention described in AGENTS.md.
+AGENTS.md owns maintenance rules; ARCHITECTURE.md owns global structure; STATE.md owns current understanding and unresolved questions; each flow note owns one local lifecycle. Keep one authoritative home for each claim.
 """,
     "AGENTS.md": """# Architecture memory maintenance rules
 
 These rules govern this knowledge directory. Keep the mechanism stable and update the system model as evidence changes.
+
+## Task contracts
+- When an approved PRD / Tech Design is supplied from chat, treat it as the intended behavior and acceptance contract. Map it to the current code; do not reopen settled design work or require duplicate PRD files in this repository.
+- When feedback reports a bug, compare expected and actual behavior and trace the real execution path before choosing a fix.
+- For legacy behavior with unclear intent, recover the mechanism from source and runtime evidence before proposing broad refactors.
+- Follow existing PR, release, and operations conventions; obtain authorization for high-impact production actions.
 
 ## Source of truth
 Current source, configuration, runtime evidence and user-approved design contracts are primary evidence. Notes are navigation and accumulated reasoning; verify relevant claims before changing code. When approved design and actual implementation disagree, record the gap rather than silently redefining either one.
@@ -49,6 +80,7 @@ Current source, configuration, runtime evidence and user-approved design contrac
 - Current explanation, competing mechanism, next probe, or investigation focus changed: update STATE.md.
 - One cross-module lifecycle changed: update its flow note.
 - Routine progress and command logs belong in the task / PR record, not new memory files.
+- Trace code semantics before deciding whether tests are needed. Add tests only when they constrain meaningful behavior or materially reduce risk; make test structure isomorphic to the affected architecture modules and business flow.
 - Update the authoritative owner first, then dependent notes only where their conclusions or navigation changed.
 
 ## Evidence convention
