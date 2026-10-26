@@ -1,0 +1,19 @@
+{
+  "name": "arch-thinking-skill",
+  "version": "0.1.0",
+  "description": "Understand, implement, debug, and evolve software systems with source-backed architecture memory.",
+  "author": {
+    "name": "jiale-li-orion",
+    "url": "https://github.com/jiale-li-orion"
+  },
+  "repository": "https://github.com/jiale-li-orion/arch-thinking-skill",
+  "homepage": "https://github.com/jiale-li-orion/arch-thinking-skill",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Architecture Thinking",
+    "shortDescription": "Software architecture reasoning and workspace memory",
+    "developerName": "jiale-li-orion",
+    "category": "Productivity"
+  }
+}

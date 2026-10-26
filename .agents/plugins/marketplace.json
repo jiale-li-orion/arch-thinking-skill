@@ -1,0 +1,21 @@
+{
+  "name": "arch-thinking-skill-marketplace",
+  "interface": {
+    "displayName": "Architecture Thinking Skill"
+  },
+  "plugins": [
+    {
+      "name": "arch-thinking-skill",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/jiale-li-orion/arch-thinking-skill.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
