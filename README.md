@@ -1,59 +1,46 @@
 # arch-thinking-skill
 
-An evidence-first architecture skill for agents working in existing, cross-module codebases.
+An evidence-first architecture and implementation skill for agents working in existing codebases.
 
-It turns source exploration into a small, maintainable model of how a system actually behaves: module boundaries, end-to-end business flows, state ownership, side effects, and failure/recovery paths. The skill uses rg / grep and ordinary source tools as the default exploration interface. It does not require a code graph, vector database, or a large mandatory workflow.
+The primary use case is not asking an agent to invent a new product design. The user has usually finished the PRD and Tech Design in chat and wants the agent to implement that contract faithfully, respond to feedback, debug defects, verify changes, and handle PR / operational follow-through. A separate path handles legacy repositories whose actual behavior and intended contract are unclear.
 
-## The idea
+## Core distinction
 
-The durable asset is not a pile of summaries. It is a model that tells the next agent where to search, which state owns the behavior, what evidence supports the explanation, and what to re-read when code changes.
+- Approved design + implementation in progress: treat the supplied design and acceptance criteria as the contract. Map them to existing code, implement the gap, verify, and report. Do not repeat design exploration.
+- Feedback / bug: compare expected and actual behavior, trace the real path and state owner, find the earliest divergence, make a targeted fix, and verify the relevant regression path.
+- Legacy / unclear repository: reconstruct the smallest evidence-backed behavioral model before making broad changes.
+- PR / operations: verify the diff, checks, delivery status and rollback implications; do not claim actions that were not confirmed.
 
-The skill keeps its entry point concise and loads focused references only for flow tracing or memory maintenance. An optional standard-library script initializes two minimal notes and checks source evidence references.
-
-## Install
-
-For Codex, clone this repository and link it into the user skill directory:
-
-    ln -s /path/to/arch-thinking-skill ~/.codex/skills/arch-thinking-skill
-
-For a repository-local installation, place or link the skill under that repository's .agents/skills/ directory. Claude Code supports the same skill folder under .claude/skills/.
-
-After installation, invoke arch-thinking-skill explicitly or let the agent select it when the task matches its description. The memory checker is an optional companion tool, not a background daemon.
-
-## Use
-
-Invoke the skill for an unfamiliar repository, a cross-module bug, a business-flow investigation, or a change whose safety depends on understanding state and side effects.
+## Knowledge maintenance
 
 The project memory convention is .arch/:
-- ARCHITECTURE.md: stable module map.
-- STATE.md: current understanding and unresolved questions.
-- flows/: only recurring or non-trivial cross-module lifecycles.
+- README.md routes the next reader to the right knowledge.
+- AGENTS.md owns stable maintenance and read-back rules.
+- ARCHITECTURE.md owns the global system model.
+- STATE.md owns current understanding and unresolved questions.
+- flows/ holds only important, recurring or failure-prone cross-module lifecycles.
 
-Initialize memory from the skill checkout:
+If a workspace already has an established knowledge architecture, preserve its semantic roles rather than creating parallel documents. See references/workspace-memory.md for the design principles distilled from a long-running research workspace.
+
+Initialize a new memory set:
 
     python scripts/arch_memory.py init --root /path/to/repository
 
-After adding evidence references:
+Find architecture notes affected by changed source files:
+
+    python scripts/arch_memory.py impact --root /path/to/repository --files src/Foo.java src/Bar.ts
+
+Validate cited evidence:
 
     python scripts/arch_memory.py check --root /path/to/repository
 
-Evidence lines use this form:
-
-    Evidence: path=src/path/File.java symbol=methodName at=abc1234
-
-The checker validates paths and symbols, warns when cited files have uncommitted changes, and warns when source has changed since the recorded commit. It does not claim to understand semantics automatically; an agent must still judge whether the documented behavior remains true.
+The checker can verify references and flag likely stale evidence; semantic validity still requires reading the code.
 
 ## Design influences
 
-This project uses the Agent Skills format and takes selective inspiration from:
-- OpenAI Codex skill-creator: concise routing, progressive disclosure, and scripts only for deterministic repeated work.
-- Anthropic's public Skills repository: a portable folder with a clear skill entry point and optional resources.
-- Graphify: persistent knowledge should be queryable and evidence should have provenance.
+The skill uses progressive disclosure and small deterministic helpers found in established skill repositories, but its workflow and memory model are designed around evidence-backed system understanding, faithful execution of an approved design, feedback-driven debugging, and maintainable cross-session knowledge.
 
-The architecture-thinking method here is original: use cheap source search to build a task-relevant behavioral model, preserve state ownership and discriminating evidence, and re-read memory when relevant implementation evidence changes. It intentionally avoids mandatory graph generation, blanket checklists, and per-task documentation.
-
-## References
-
+References:
 - https://github.com/openai/codex/tree/main/codex-rs/skills/src/assets/samples/skill-creator
 - https://github.com/anthropics/skills
 - https://github.com/Graphify-Labs/graphify

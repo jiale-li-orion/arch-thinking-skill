@@ -17,7 +17,7 @@ class ArchMemoryTests(unittest.TestCase):
 
     def test_init_creates_only_core_files_and_does_not_overwrite(self):
         created = init_memory(self.root)
-        self.assertEqual({p.name for p in created}, {"ARCHITECTURE.md", "STATE.md"})
+        self.assertEqual({p.name for p in created}, {"README.md", "AGENTS.md", "ARCHITECTURE.md", "STATE.md"})
         architecture = self.root / ".arch" / "ARCHITECTURE.md"
         architecture.write_text("human-maintained", encoding="utf-8")
         self.assertEqual(init_memory(self.root), [])
@@ -62,6 +62,31 @@ class ArchMemoryTests(unittest.TestCase):
         note.write_text("Evidence: path=../outside.py symbol=foo\n", encoding="utf-8")
         errors, _, _ = check_memory(self.root)
         self.assertIn("escapes repository", errors[0])
+
+    def test_impact_finds_notes_that_cite_changed_files(self):
+        init_memory(self.root)
+        source = self.root / "src" / "service.py"
+        source.parent.mkdir()
+        source.write_text("def classify_request():\n    return True\n", encoding="utf-8")
+        note = self.root / ".arch" / "flows" / "dialogue.md"
+        note.parent.mkdir()
+        note.write_text(
+            "Evidence: path=src/service.py symbol=classify_request\n",
+            encoding="utf-8",
+        )
+        from arch_memory import impact_memory
+        results, errors = impact_memory(self.root, ["src/service.py"])
+        self.assertEqual(errors, [])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], note)
+        self.assertEqual(results[0][1], ["src/service.py"])
+
+    def test_impact_ignores_paths_outside_repository(self):
+        init_memory(self.root)
+        from arch_memory import impact_memory
+        results, errors = impact_memory(self.root, ["../outside.py"])
+        self.assertEqual(results, [])
+        self.assertIn("outside repository", errors[0])
 
     def test_source_change_after_recorded_commit_is_stale_warning(self):
         import subprocess

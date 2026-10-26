@@ -1,49 +1,66 @@
 ---
 name: arch-thinking-skill
-description: Understand, trace, debug, and safely change existing software systems whose behavior crosses modules, services, state machines, persistence, or external APIs. Use for unfamiliar repositories, cross-module bugs, business-flow tracing, and maintaining architecture knowledge across sessions.
+description: Understand, trace, debug, and safely change existing software systems whose behavior crosses modules, services, state machines, persistence, or external APIs. Use for unfamiliar repositories, cross-module bugs, implementing an already-approved design, feedback-driven fixes, and maintaining architecture knowledge across sessions.
 ---
 
 # Architecture Thinking
 
 Build the smallest evidence-backed model that explains the behavior relevant to the task. Source code and runtime evidence are authoritative; architecture notes accelerate discovery but never replace verification.
 
-## Operating loop
+## Route by task phase
 
-1. **Recover.** If .arch/ exists, read ARCHITECTURE.md and STATE.md, then only the flow notes relevant to this task. Read applicable AGENTS.md and README instructions. Treat memory as a map, not ground truth.
-2. **Choose a question.** Classify the task as orientation, flow tracing, failure diagnosis, behavior change, or memory maintenance. State the concrete behavior to explain or change.
-3. **Search cheaply.** Start with rg --files, rg -n, git grep, git log, git blame, and narrow source reads. Follow symbols, callers, state writes, configuration, persistence, external calls, and tests. Expand scope only when evidence requires it.
-4. **Trace the behavior.** Follow the relevant path end to end: trigger → producer → transformations → authoritative state owner → persistence / external side effect → consumer → completion, failure, retry, and recovery.
-5. **Separate evidence from interpretation.** Record what code or runtime evidence directly shows, what mechanism you infer, and what remains unknown. When explanations compete, find the smallest probe that distinguishes them.
-6. **Change at the right boundary.** Identify the state owner and caller contract before editing. Prefer the smallest change that preserves unrelated behavior. Validate the changed path and the important adjacent failure path.
-7. **Update memory selectively.** Persist only knowledge that will materially reduce future rediscovery: a durable boundary, cross-module flow, state owner, failure/recovery rule, or decision that changes future work. Fix stale notes when contradicted. Do not create a report for every task.
-8. **Close the loop.** State what was verified, what remains inferred or unverified, and which memory changed. A diagram alone does not prove a flow is understood.
+First identify the user's actual phase; do not force every task through the same workflow.
 
-## Memory model
+- **Approved design → implementation:** When the user supplies or points to an approved PRD / Tech Design, treat it as the task contract. Read references/task-routing.md § Design-led implementation. Do not repeat design exploration, rewrite the design, or ask questions already answered there. Map requirements and acceptance criteria to existing code, implement the requested scope, verify it, and report gaps. Ask only about contradictions or decisions that materially block safe implementation.
+- **Implementation feedback / bug:** When a feature exists but fails a stated acceptance criterion or user-observed behavior, read references/task-routing.md § Feedback and debugging. Reproduce or localize the failure, trace the actual implementation, find the mechanism, make a targeted fix, and verify the reported case plus a relevant regression path.
+- **Legacy / unfamiliar system:** When the intended behavior or architecture is unclear, start from the observable behavior and recover the relevant flow from source. Read references/flow-tracing.md; build only enough global context to explain the issue.
+- **PR / operations / release:** After implementation or a fix, follow the repository's existing verification, branch, PR, deployment and rollback conventions. See references/task-routing.md § Delivery and operations. Never deploy, merge, or perform destructive operations without authorization.
+- **Architecture or memory maintenance:** Read references/workspace-memory.md and references/memory-maintenance.md only when the task needs them.
 
-Project memory lives in .arch/ and stays intentionally small:
+## Operating mechanism
 
-- ARCHITECTURE.md — stable module boundaries, responsibilities, entry points, and dependency direction.
-- STATE.md — current understanding, unresolved questions, active investigation, and the next useful probe. Replace obsolete state instead of accumulating a diary.
-- flows/<name>.md — only for important or repeatedly investigated cross-module behavior. Capture lifecycle, state ownership, side effects, failure paths, and source evidence.
-- Durable architectural decisions may use an existing ADR convention. Do not introduce an ADR system by default.
+1. **Recover.** Read repository instructions and current task context. If the project already has a maintained knowledge system, follow its entry and dependency rules instead of creating a parallel one. Otherwise, use .arch/ if present: read README.md and AGENTS.md, then ARCHITECTURE.md and STATE.md as relevant. Load only flow notes needed for this task.
+2. **Choose the next uncertainty.** Identify the behavior, decision, or acceptance criterion that must be explained or satisfied. Reuse current knowledge and target the gap that could change the conclusion.
+3. **Search cheaply.** Prefer rg, grep, git grep, git log, git blame, and narrow source reads. Follow callers, transformations, state writes, configuration, persistence, side effects, and consumers. Expand scope when evidence requires it.
+4. **Build a behavioral explanation.** Trace trigger → producer → transformations → authoritative state owner → persistence or external effect → consumer → completion, failure, retry, and recovery. Record only boundaries that change behavior or ownership.
+5. **Discriminate explanations.** Separate observed facts, inferred mechanisms, and unknowns. If multiple mechanisms explain the observation, choose the smallest safe probe that makes their predictions differ.
+6. **Change at the correct boundary.** Understand the caller contract and authoritative state owner before editing. Make the smallest change that preserves unrelated behavior; validate the edited path and the most relevant adjacent failure path.
+7. **Maintain reusable knowledge.** Update a note only when the discovery changes future search, interpretation, implementation, or verification. Re-read notes implicated by relevant source changes. Do not turn each task into a report.
+8. **Close with evidence.** State what changed, what was verified, what remains uncertain, and which durable knowledge was updated.
 
-Initialize the two core notes only when they will be maintained:
+## Knowledge model
+
+The default project memory in .arch/ has four semantic owners:
+
+- README.md — entry point and task-to-document routing.
+- AGENTS.md — stable maintenance rules, dependencies, ownership, and re-read triggers.
+- ARCHITECTURE.md — global system model: boundaries, responsibilities, dependencies, state ownership, and invariants.
+- STATE.md — current understanding, unresolved questions, competing explanations, and next useful probe.
+- flows/<name>.md — optional local deep analysis for cross-module or failure-prone business lifecycles.
+
+These are defaults, not a mandate. If a workspace already has equivalents such as a research tree, formulation, evidence base, and run records, preserve its semantic divisions and extend it. Do not force it into this layout.
+
+Initialize a new memory set without overwriting existing files:
 
     python <skill-dir>/scripts/arch_memory.py init --root <repository>
 
-Validate evidence after meaningful memory edits:
+Find notes that cite files being changed:
+
+    python <skill-dir>/scripts/arch_memory.py impact --root <repository> --files path/to/File.java path/to/other.ts
+
+After meaningful source or note changes, validate evidence:
 
     python <skill-dir>/scripts/arch_memory.py check --root <repository>
 
-Use this checkable evidence form beside important claims:
+Evidence references can record a repository-relative path, exact symbol or distinctive string, and optionally the Git commit at which it was checked. The checker validates references and flags likely stale evidence; it cannot prove semantic correctness.
 
-    Evidence: path=src/path/File.java symbol=methodName at=abc1234
+## Progressive loading
 
-The path is repository-relative. The symbol is an exact identifier or distinctive source string. The optional Git commit records when the source was checked. The checker reports missing paths/symbols as errors and changed evidence as stale warnings.
+- Approved design or implementation in progress: read references/task-routing.md.
+- Feedback-driven fix or legacy incident: read references/task-routing.md and references/flow-tracing.md.
+- Cross-module flow with unclear behavior: read references/flow-tracing.md.
+- Workspace setup, global/local knowledge design: read references/workspace-memory.md.
+- Updating, pruning, or validating memory: read references/memory-maintenance.md.
+- Simple local edits: follow project instructions and the relevant task contract; do not load every reference.
 
-## Load details only when needed
-
-- For a cross-module feature or incident, read references/flow-tracing.md.
-- When creating, updating, or pruning architecture memory, read references/memory-maintenance.md.
-
-Do not load both references for a simple local edit. Do not build a full repository graph, read every file, or introduce a database / vector store unless a concrete query need justifies it.
+No full-repository graph, vector database, mandatory design document, or per-task diary by default. Add mechanisms only when they reduce a concrete class of rediscovery or error.
