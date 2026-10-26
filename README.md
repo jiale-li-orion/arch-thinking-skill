@@ -10,6 +10,16 @@ The durable asset is not a pile of summaries. It is a model that tells the next 
 
 The skill keeps its entry point concise and loads focused references only for flow tracing or memory maintenance. An optional standard-library script initializes two minimal notes and checks source evidence references.
 
+## Install
+
+For Codex, clone this repository and link it into the user skill directory:
+
+    ln -s /path/to/arch-thinking-skill ~/.codex/skills/arch-thinking-skill
+
+For a repository-local installation, place or link the skill under that repository's .agents/skills/ directory. Claude Code supports the same skill folder under .claude/skills/.
+
+After installation, invoke arch-thinking-skill explicitly or let the agent select it when the task matches its description. The memory checker is an optional companion tool, not a background daemon.
+
 ## Use
 
 Invoke the skill for an unfamiliar repository, a cross-module bug, a business-flow investigation, or a change whose safety depends on understanding state and side effects.
