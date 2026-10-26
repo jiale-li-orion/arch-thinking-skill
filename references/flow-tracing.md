@@ -48,3 +48,8 @@ After a change, validate the edited path, the handoff contract, and the most rel
 ## 6. Promote only reusable discoveries
 
 Create or update a flow note when the flow is likely to be revisited, has non-obvious state ownership, crosses multiple modules, or explains a recurring incident. A one-off local fix with no durable architectural implication usually needs no new memory file.
+
+
+## Testing follows architecture, not ritual
+
+After tracing the real flow, decide whether a test adds meaningful evidence. Do not add tests that only assert a symbol exists, a field has a value, a mock was called, or a happy-path response is returned. When a test is justified, align it with the actual architecture: preserve the relevant module contract, exercise the state transition or cross-module handoff at risk, and assert the externally meaningful behavior. Avoid building a parallel test-only flow that bypasses the code boundary implicated by the failure. Prefer semantic source tracing when the behavior is straightforward and existing validation is adequate; for device, external-service, or timing-dependent behavior, explicitly identify what unit/integration tests cannot establish.

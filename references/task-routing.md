@@ -10,7 +10,7 @@ Use when the user has already completed or approved the PRD / Tech Design in cha
 2. **Map criteria to implementation.** For each required behavior, identify the owning module, entry point, state owner, consumer, and validation path. Reuse existing patterns and dependencies unless the design explicitly changes them.
 3. **Check the implementation gap.** Distinguish already implemented, partially implemented, missing, and contradictory behavior. Do not rewrite working code merely to make it resemble a new architecture diagram.
 4. **Implement in the user's requested scope.** Make the smallest coherent change. Preserve existing behavior outside acceptance criteria. Ask only when the design contains a contradiction, omits a decision that blocks implementation, or conflicts with a material repository constraint. Do not ask again about settled requirements.
-5. **Verify against the contract.** Turn acceptance criteria into observable checks. Run targeted tests and relevant adjacent regression checks; inspect the diff for accidental scope expansion. If a criterion cannot be tested in the available environment, state exactly which boundary remains unverified.
+5. **Verify against the contract.** First trace the implementation semantics and the real module boundaries. Do not add a test merely to assert that a method, field, mock call, or happy-path return exists. If a test materially reduces risk, make it isomorphic to the affected architecture: exercise the relevant module contract and meaningful state transition, and assert an observable acceptance criterion. Prefer one behavior-representative test over shallow test accumulation. For trivial changes, existing checks and code-semantic inspection may be sufficient. If a criterion cannot be tested in the available environment, state exactly which boundary remains unverified.
 6. **Update durable knowledge only when warranted.** Record a newly discovered boundary, state owner, non-obvious contract, or reusable failure mode. Routine implementation progress belongs in the PR/task record, not a new architecture note.
 
 The design is the specification of intended behavior; current source is evidence of actual behavior. When they disagree, preserve that distinction and report the gap instead of silently rewriting the design to fit the code.
@@ -24,7 +24,7 @@ Use when a user reports that a newly implemented feature is wrong, incomplete, f
 3. Compare the observed path with the intended contract and any prior implementation. Identify the earliest boundary where the values, state, timing, or side effect diverge.
 4. Keep competing mechanisms explicit until evidence distinguishes them. Prefer targeted reads, existing logs, narrow instrumentation, or a minimal reproduction over speculative multi-file edits.
 5. Make a targeted correction after locating the responsible mechanism. If an urgent mitigation is needed before root cause is fully established, label it as mitigation and keep the investigation open.
-6. Validate the reported case, a relevant regression path, and any important recovery or failure path. Check neighboring call sites and state writers when the fix changes shared behavior.
+6. Trace the actual semantics before deciding on tests. Add tests only when they meaningfully constrain the failure mechanism or prevent a plausible regression; align them with the architecture boundaries and state transitions involved. Avoid shallow validation tests and over-mocked tests that can pass while the reported behavior is still broken. Validate the reported case and relevant recovery path using the strongest available evidence, and name any unverified runtime boundary. Check neighboring call sites and state writers when the fix changes shared behavior.
 7. Report the root cause with evidence, the exact change, verification performed, residual uncertainty, and PR status. Do not equate tests passing with production verification when the failing boundary was not exercised.
 
 ## Legacy repository / unclear intent
@@ -39,6 +39,7 @@ If intended behavior is genuinely unknown, describe the competing interpretation
 
 After a code change:
 
+- Trace the changed behavior through its owning module and relevant adjacent boundaries before choosing checks. Tests are evidence, not a substitute for semantic understanding.
 - Inspect the diff and working tree; confirm no unrelated files or generated artifacts were changed.
 - Run checks that exercise the changed contract and the most relevant adjacent path.
 - Follow existing branch and PR conventions. Summarize behavior changed, evidence, tests, limitations, and rollback implications.

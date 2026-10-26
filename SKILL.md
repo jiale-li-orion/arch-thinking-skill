@@ -24,13 +24,13 @@ First identify the user's actual phase; do not force every task through the same
 3. **Search cheaply.** Prefer rg, grep, git grep, git log, git blame, and narrow source reads. Follow callers, transformations, state writes, configuration, persistence, side effects, and consumers. Expand scope when evidence requires it.
 4. **Build a behavioral explanation.** Trace trigger → producer → transformations → authoritative state owner → persistence or external effect → consumer → completion, failure, retry, and recovery. Record only boundaries that change behavior or ownership.
 5. **Discriminate explanations.** Separate observed facts, inferred mechanisms, and unknowns. If multiple mechanisms explain the observation, choose the smallest safe probe that makes their predictions differ.
-6. **Change at the correct boundary.** Understand the caller contract and authoritative state owner before editing. Make the smallest change that preserves unrelated behavior; validate the edited path and the most relevant adjacent failure path.
+6. **Change at the correct boundary.** Understand the caller contract and authoritative state owner before editing. Make the smallest change that preserves unrelated behavior. Prefer tracing code semantics over adding tests as a ritual; add tests only when they cover a meaningful behavior, regression risk, or contract that cannot be established adequately from the existing evidence.
 7. **Maintain reusable knowledge.** Update a note only when the discovery changes future search, interpretation, implementation, or verification. Re-read notes implicated by relevant source changes. Do not turn each task into a report.
 8. **Close with evidence.** State what changed, what was verified, what remains uncertain, and which durable knowledge was updated.
 
 ## Knowledge model
 
-The default project memory in .arch/ has four semantic owners:
+The default memory layout has four semantic owners (stored in `.arch/` or a separate small Git repository):
 
 - README.md — entry point and task-to-document routing.
 - AGENTS.md — stable maintenance rules, dependencies, ownership, and re-read triggers.
@@ -42,17 +42,23 @@ These are defaults, not a mandate. If a workspace already has equivalents such a
 
 Initialize a new memory set without overwriting existing files:
 
-    python <skill-dir>/scripts/arch_memory.py init --root <repository>
+    python <skill-dir>/scripts/arch_memory.py init --root <source-repository> --memory-root <separate-memory-directory>
 
 Find notes that cite files being changed:
 
-    python <skill-dir>/scripts/arch_memory.py impact --root <repository> --files path/to/File.java path/to/other.ts
+    python <skill-dir>/scripts/arch_memory.py impact --root <source-repository> --memory-root <separate-memory-directory> --files path/to/File.java path/to/other.ts
 
 After meaningful source or note changes, validate evidence:
 
-    python <skill-dir>/scripts/arch_memory.py check --root <repository>
+    python <skill-dir>/scripts/arch_memory.py check --root <source-repository> --memory-root <separate-memory-directory>
 
 Evidence references can record a repository-relative path, exact symbol or distinctive string, and optionally the Git commit at which it was checked. The checker validates references and flags likely stale evidence; it cannot prove semantic correctness.
+
+## Testing policy
+
+Do not add shallow validation tests that merely assert a file, field, method, mock call, status code, or happy-path return exists. First trace the actual implementation semantics: callers, state writers, transformations, persistence, async handoffs, and consumers. Use that understanding to decide whether a test is needed.
+
+When tests materially reduce risk, make their structure isomorphic to the architecture being changed: test the relevant module boundary and business lifecycle, preserve the real contract between adjacent modules, and assert externally meaningful state transitions or outcomes. Avoid tests that invent a parallel architecture, over-mock the behavior under investigation, or pass while the reported failure remains possible. Prefer one meaningful boundary/integration test over a pile of shallow checks when that test covers the real risk. For hardware, external services, or timing-sensitive behavior, combine deterministic tests with explicit semantic tracing and name any runtime boundary that remains unverified. If the change is trivial and existing checks plus source semantics are sufficient, add no test.
 
 ## Progressive loading
 

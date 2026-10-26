@@ -4,6 +4,8 @@ Use this reference when entering a long-lived workspace, establishing its memory
 
 ## Borrow the mechanism, not the file count
 
+For a large coding repository, do not default to placing all architecture notes in the main source Git history. A dedicated small memory repository is often cleaner: its commits track changes in system understanding, while source commits track implementation. Link the two through repository-relative evidence paths and recorded source revisions. The same memory tool should also support a local `.arch/` directory for small projects or teams that prefer co-located docs.
+
 The Research workspace demonstrates a useful separation of responsibilities: README routes the reader; AGENTS defines continuation and read-back rules; stable frameworks and trees preserve the global problem structure; STATE records current judgment and next choice; detailed formulation and insight assets support local reasoning; evidence and run records preserve source facts and execution results; original notes and archives retain provenance.
 
 An engineering workspace needs the same functional separation, adapted to software behavior. Do not copy research-specific filenames mechanically. Do not create every possible file in every repository.
@@ -34,6 +36,10 @@ This produces two connected scales of reasoning:
 - Local: what mechanism explains this path, and what evidence distinguishes it from alternatives?
 
 Do not let a local fix silently redefine the global architecture. Do not preserve a global abstraction after verified local behavior contradicts it; revise only the affected claim and its consequences.
+
+## Separate memory history from source history
+
+When using a separate memory repository, the source repository remains the authority for code paths, symbols, and source commit IDs; the memory repository is the authority for architecture notes and their history. Invoke the checker with both roots, for example `arch_memory.py check --root /path/to/source-repo --memory-root /path/to/architecture-memory`. This keeps source-change detection tied to source Git while keeping note commits independent. Do not automatically create or push a public repository; storage location and sharing policy are workspace decisions.
 
 ## Read-back policy
 

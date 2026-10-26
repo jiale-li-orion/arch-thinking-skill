@@ -4,6 +4,8 @@ Architecture memory exists to reduce repeated exploration and improve decisions.
 
 ## Ownership
 
+For a large coding repository, prefer a separate small Git repository for architecture memory when this keeps the main implementation history focused. Keep the memory repo local/private by default unless sharing is intended. Pass both roots to the helper: the source root identifies evidence paths and source revisions; the memory root identifies notes. For small projects, `.arch/` inside the source repository remains a valid simpler option.
+
 - README owns navigation and task-to-document routing.
 - AGENTS owns stable maintenance and re-read rules.
 - ARCHITECTURE owns the global model.
