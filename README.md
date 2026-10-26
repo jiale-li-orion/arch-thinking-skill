@@ -79,8 +79,8 @@ python3 scripts/arch_memory.py init --root /path/to/repo
 
 已有其他文档位置时指定 `--memory-root`。旧版 `.arch/` 的接续规则见初始化流程。图谱服务与检索插件属于可选外部能力；本 skill 的完整工作路径使用文档、rg、源码、Git 和必要的运行证据。
 
-## 本版的保留与归约
+## 方法边界
 
-研究版迁移的是来源职责、渐进加载、当前解释、局部证据回传及知识保真。工程版围绕真实契约、生产消费、存储计算通信、状态生命周期、复用与交付展开。原来的两份记忆参考合并为初始化和知识维护，重复测试告诫归入工程思维的六条用户原始规则。通用规则按原文保留，具体任务状态随工作更新。
+系统理解由真实契约、生产消费、存储计算通信、状态生命周期、复用与交付共同约束。长期知识归并保留后续需求、故障与迁移仍会用到的机制区别；当前任务的过程由任务记录和 Git 承接。六条工程判断规则保存在[工程思维](assets/workspace/工程思维.md#六条工程判断规则原文保留)。
 
-公开工程参照已融入对应动作：[Go pipelines](https://go.dev/blog/pipelines)用于生产者退出与资源释放；[Tokio channels](https://tokio.rs/tokio/tutorial/channels)以命令队列和响应通道区分交接与完成；[Google code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)用于结合整体设计、真实行为和变更上下文审查。具体项目继续按自己的语言、运行时和接口语义判断。
+相关机制参照：[Go pipelines](https://go.dev/blog/pipelines)解释生产者退出与资源释放；[Tokio channels](https://tokio.rs/tokio/tutorial/channels)区分交接与完成；[Google code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)结合整体设计、真实行为和变更上下文审查。具体项目按其语言、运行时和接口语义应用。
