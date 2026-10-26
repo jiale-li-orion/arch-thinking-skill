@@ -40,7 +40,7 @@ class ArchitectureMemoryLifecycleTests(unittest.TestCase):
         created = init_memory(self.root, self.memory)
         self.assertEqual(
             {path.name for path in created},
-            {"README.md", "AGENTS.md", "ARCHITECTURE.md", "STATE.md"},
+            {"README.md", "AGENTS.md", "工程思维.md", "ARCHITECTURE.md", "STATE.md"},
         )
         self.assertFalse((self.root / ".arch").exists())
 
@@ -71,24 +71,55 @@ class ArchitectureMemoryLifecycleTests(unittest.TestCase):
         self.assertEqual(checked, 1)
         self.assertTrue(any("changed after" in warning for warning in warnings))
 
-    def test_evidence_check_rejects_broken_source_claims(self):
-        init_memory(self.root, self.memory)
+    def test_workspace_init_preserves_project_and_checks_real_evidence(self):
+        readme = self.root / "README.md"
+        readme.write_text("# Existing project\nKeep this contract.\n", encoding="utf-8")
+        init_memory(self.root)
+        self.assertEqual(readme.read_text(encoding="utf-8"), "# Existing project\nKeep this contract.\n")
+        self.assertFalse((self.root / ".arch").exists())
         source = self.root / "service.py"
         source.write_text("def actual_decision():\n    return True\n", encoding="utf-8")
-        state = self.memory / "STATE.md"
+        state = self.root / "STATE.md"
         state.write_text(
             "Evidence: path=missing.py symbol=run\n"
             "Evidence: path=service.py symbol=wrong_decision\n"
             "Evidence: path=../outside.py symbol=secret\n",
             encoding="utf-8",
         )
-        errors, warnings, checked = check_memory(self.root, self.memory)
+        unrelated = self.root / "docs" / "release.md"
+        unrelated.parent.mkdir()
+        unrelated.write_text("Evidence: path=release-only.py\n", encoding="utf-8")
+        flow = self.root / "flows" / "service.md"
+        flow.parent.mkdir()
+        flow.write_text("Evidence: path=service.py symbol=actual_decision\n", encoding="utf-8")
+        errors, warnings, checked = check_memory(self.root)
         self.assertEqual(warnings, [])
-        self.assertEqual(checked, 3)
+        self.assertEqual(checked, 4)
         self.assertEqual(len(errors), 3)
         self.assertTrue(any("missing evidence path" in error for error in errors))
         self.assertTrue(any("not found" in error for error in errors))
         self.assertTrue(any("escapes source repository" in error for error in errors))
+        hits, errors = impact_memory(self.root, ["service.py"])
+        self.assertEqual(errors, [])
+        self.assertEqual(hits, [(state, ["service.py"]), (flow, ["service.py"])])
+
+    def test_existing_legacy_workspace_keeps_its_evidence_and_state(self):
+        legacy = self.root / ".arch"
+        legacy.mkdir()
+        state = legacy / "STATE.md"
+        state.write_text("Existing task and recovery point\n", encoding="utf-8")
+        source = self.root / "worker.py"
+        source.write_text("def execute():\n    return 1\n", encoding="utf-8")
+        (legacy / "ARCHITECTURE.md").write_text(
+            "Evidence: path=worker.py symbol=execute\n", encoding="utf-8"
+        )
+        init_memory(self.root)
+        self.assertEqual(state.read_text(encoding="utf-8"), "Existing task and recovery point\n")
+        self.assertFalse((self.root / "ARCHITECTURE.md").exists())
+        self.assertEqual(check_memory(self.root), ([], [], 1))
+        hits, errors = impact_memory(self.root, ["worker.py"])
+        self.assertEqual(errors, [])
+        self.assertEqual(hits, [(legacy / "ARCHITECTURE.md", ["worker.py"])])
 
 
 if __name__ == "__main__":

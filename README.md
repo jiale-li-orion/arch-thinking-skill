@@ -1,91 +1,86 @@
 # arch-thinking-skill
 
-面向长期维护的 Coding 工作区：让 Agent 先恢复工作区知识，再根据任务阶段选择操作策略，并把值得复用的新认知更新回工作区。记忆归工作区所有；Skill 只定义建立、读取、更新和核验这些资产的机制。
+面向软件系统的理解、实现与演进。全局架构指导局部语义追踪，代码和运行反馈修正系统模型；阶段策略完成当前任务，工作区文档使理解能够持续接续。
 
-## 图 1：Skill 自身的模块与依赖
+适用于按批准设计实施、功能迭代、Debug、重构、PR 和运维。大型遗留库是其中一个深入场景：需要辨认多套实现、恢复隐含契约、平衡复用与新逻辑并把握修复边界。
 
-~~~mermaid
+## 渐进加载与职责
+
+| 入口 | 职责与加载条件 |
+| --- | --- |
+| [SKILL](SKILL.md) | 接管、公共方法和按需路由 |
+| [AGENTS](AGENTS.md) | 维护本 skill 的职责与原始规则 |
+| [工程思维](assets/workspace/工程思维.md) | 全局与局部切换的完整方法及具体判断案例；初始化后由工作区持有 |
+| [任务路由](references/task-routing.md) | 根据当前任务和系统条件选择实施、Debug、重构、遗留库或交付策略 |
+| [语义追踪](references/flow-tracing.md) | 真实路径、生产消费、状态、时序与责任边界 |
+| [初始化](references/initialization.md) | 接入已有文档，补齐结构并恢复真实系统知识 |
+| [知识维护](references/knowledge-maintenance.md) | 文件职责、图、变化回传与接续 |
+| [工作区模板](assets/workspace/README.md) | README、AGENTS、工程思维、ARCHITECTURE、STATE；按实际缺口使用 |
+| [辅助脚本](scripts/arch_memory.py) | init / impact / check；只执行机械辅助 |
+
+工程正文保存在工作区，设计可以来自 chat、文档或 issue。现有同职责资产直接继承，源码和 Git 提供具体证据与历史。默认使用工作区内普通文件，复杂模块和链路按需展开。
+
+## 图 1：Skill 与工作区如何衔接
+
+```mermaid
 flowchart TB
-    INDEX["README.md<br/>架构索引与依赖图"]
-    RULES["AGENTS.md<br/>Skill 结构维护协议"]
-    SKILL["SKILL.md<br/>入口、公共机制、渐进式路由"]
-    ROUTE["references/task-routing.md<br/>实施 / Debug / 旧系统 / 交付"]
-    FLOW["references/flow-tracing.md<br/>代码语义、调用链、状态与失败"]
-    MEMORY["references/workspace-memory.md<br/>工作区知识架构与依赖"]
-    MAINT["references/memory-maintenance.md<br/>知识更新、回读、失效、裁剪"]
-    TOOL["scripts/arch_memory.py<br/>init / impact / check"]
-    TEST["tests/<br/>工具的关键行为生命周期"]
+    SK[SKILL 接管与路由] --> EN[项目 README 与 AGENTS]
+    EN --> AR[ARCHITECTURE 简洁全局]
+    EN --> ST[STATE 契约与任务]
+    SK --> TH[工程思维 通用判断]
+    SK --> RT[任务路由 按阶段选择]
+    RT --> TR[语义追踪 按需深入]
+    SK --> IN[初始化 结构与知识恢复]
+    IN --> TM[工作区模板]
+    TM --> EN
+    IN --> AR
+    IN --> ST
+    AR <--> FL[模块图与关键链路]
+    ST --> FL
+    TR --> FL
+    SK --> KM[知识维护]
+    KM --> AR
+    KM --> ST
+    KM --> FL
+```
 
-    INDEX --> SKILL
-    RULES --> SKILL
-    SKILL --> ROUTE
-    SKILL -. "when tracing a cross-module flow" .-> FLOW
-    SKILL -. "when setting up workspace memory" .-> MEMORY
-    SKILL -. "when maintaining knowledge" .-> MAINT
-    MEMORY --> TOOL
-    MAINT --> TOOL
-    TOOL --> TEST
-~~~
+方法、策略、项目知识和机械工具分别维护。入口保持短，所需细节沿实际任务加载。
 
-入口只负责识别任务阶段、恢复相关知识和选择下一步。详细操作策略按需加载；工具只自动化可机械判定的工作，不代替 Agent 对代码语义和架构的判断。
+## 图 2：行动与理解共同迭代
 
-## 图 2：每个 Coding 工作区的知识依赖
+```mermaid
+flowchart TD
+    START[接管或上下文恢复] --> READ[入口 规则 全局架构 当前状态]
+    READ --> READY{接续知识的就绪状态}
+    READY -->|需要补充| INIT[恢复设计 源码 配置与运行事实]
+    INIT --> READ
+    READY -->|能够行动| TASK[选择任务策略与相关系统条件]
+    TASK --> GLOBAL[定位职责 状态归属 实现选择及约束]
+    GLOBAL --> LOCAL[rg 定位与局部语义追踪]
+    LOCAL --> IMPACT[解释行为 判断复用与修改边界]
+    IMPACT --> CHANGE[完成最小完整修改]
+    CHANGE --> VERIFY[依据契约与机制选择有效验证]
+    VERIFY -->|反馈需要解释| LOCAL
+    VERIFY -->|满足验收| DELIVER[完成授权范围内交付]
+    LOCAL -->|关系发生变化| UPDATE[定点更新全局 模块或链路图]
+    UPDATE --> GLOBAL
+    DELIVER --> STATE[更新当前接续与实际交付状态]
+```
 
-~~~mermaid
-flowchart TB
-    INPUT["外部任务契约<br/>Chat 中已批准的 PRD / Tech Design"]
-    SOURCE["代码证据<br/>源码 / 配置 / API / Git 历史 / 运行反馈"]
-    ENTRY["README.md<br/>知识索引、依赖图、任务回读路由"]
-    RULES["AGENTS.md<br/>稳定维护协议、回读条件、更新责任"]
-    ARCH["ARCHITECTURE.md<br/>全局系统模型与不变量"]
-    STATE["STATE.md<br/>当前认识、未决问题、下一步调查"]
-    FLOW["flows/<name>.md<br/>必要时维护的局部业务链路"]
-    RUN["任务 / PR / 运维记录<br/>本次执行与交付事实"]
+调查与实施可以往返，文档更新由有价值的关系变化触发。新系统沿设计建立实现；成熟系统按任务复用；遗留库在实际路径与兼容关系清楚后确定修改范围。
 
-    INPUT --> ENTRY
-    SOURCE --> ARCH
-    SOURCE --> FLOW
-    ENTRY --> RULES
-    RULES --> ARCH
-    RULES --> STATE
-    ARCH <--> STATE
-    ARCH <--> FLOW
-    FLOW -. "when local evidence changes global understanding" .-> STATE
-    RUN -. "reusable findings only" .-> STATE
-~~~
+## 初始化与接续
 
-箭头表示知识来源、读取依赖和认知反馈，不是每次任务必须执行的线性步骤。设计契约描述预期行为，源码和运行证据描述实际行为；两者有差异时保留差异并调查，不让任何一方悄悄覆盖另一方。
+用户明确要求初始化，或长期维护、跨模块任务缺少可接续的系统知识时，读取[初始化流程](references/initialization.md)。脚本补缺文件，Agent 继续填写真实系统图、任务契约、实现差距、证据和下一动作：
 
-## 文件职责
+```bash
+python3 scripts/arch_memory.py init --root /path/to/repo
+```
 
-| 文件 / 目录 | 唯一职责 | 何时读取 |
-|---|---|---|
-| SKILL.md | Skill 入口、公共认知循环、任务路由与渐进加载 | 任务命中 Skill 时 |
-| AGENTS.md | 本仓库的文档职责、依赖维护与修改约束 | 修改 Skill 结构或内容时 |
-| references/task-routing.md | 根据产品/实现阶段选择实施、Debug、旧系统探索或交付策略 | 任务阶段判定后 |
-| references/flow-tracing.md | 从源码语义恢复端到端行为、状态所有权和失败路径 | 跨模块行为或故障需要解释时 |
-| references/workspace-memory.md | 设计工作区知识资产的依赖、全局/局部关系和渐进式加载 | 初始化或调整工作区知识架构时 |
-| references/memory-maintenance.md | 定义知识更新、失效、回读与裁剪机制 | 修改或维护知识资产时 |
-| scripts/arch_memory.py | 初始化知识骨架、按源码变更定位引用笔记、检查证据引用 | 需要机械化检查时 |
-| tests/ | 验证工具的关键行为链路，不衡量 Skill 内容的质量 | 修改工具行为后 |
+已有其他文档位置时指定 `--memory-root`。旧版 `.arch/` 的接续规则见初始化流程。图谱服务与检索插件属于可选外部能力；本 skill 的完整工作路径使用文档、rg、源码、Git 和必要的运行证据。
 
-## Coding 任务路由
+## 本版的保留与归约
 
-- **设计已定稿 → 实施：** 将用户提供的设计和验收标准作为契约，映射到现有代码，实施并核验。
-- **实现反馈 / Bug：** 比较预期与实际，追踪最早偏差、状态与失败恢复，针对机制修复。
-- **旧系统 / 意图不清：** 通过 rg / grep 和源码语义逐步恢复相关系统模型。
-- **PR / 运维交付：** 按现有仓库流程核验变更、交付状态和回滚约束。
+研究版迁移的是来源职责、渐进加载、当前解释、局部证据回传及知识保真。工程版围绕真实契约、生产消费、存储计算通信、状态生命周期、复用与交付展开。原来的两份记忆参考合并为初始化和知识维护，重复测试告诫归入工程思维的六条用户原始规则。通用规则按原文保留，具体任务状态随工作更新。
 
-任务路由是可切换的状态，不是固定流水线。实施中发现设计缺口可以回到澄清；Debug 发现系统模型缺失可以局部探索；交付后的反馈重新进入 Debug。
-
-## 设计约束
-
-- 工作区知识是唯一的长期记忆载体；不依赖 Agent 隐式长期记忆。
-- 大型 Coding Repo 可使用独立的小型 Git 知识仓库；小项目也可使用源码仓库内的 .arch/。
-- 先追踪代码语义，再决定是否需要测试；测试应覆盖真实模块边界和有意义的行为。
-- 只在知识影响未来搜索、解释、决策或验证时更新文档；不为每个任务生成总结。
-- 不默认生成全仓库图谱、向量库、重复 PRD 或多余索引。
-
-## 状态
-
-当前为架构骨架阶段。文档职责、依赖和任务路由先稳定；各模块的具体方法与细节由后续设计逐步填充。
+公开工程参照已融入对应动作：[Go pipelines](https://go.dev/blog/pipelines)用于生产者退出与资源释放；[Tokio channels](https://tokio.rs/tokio/tutorial/channels)以命令队列和响应通道区分交接与完成；[Google code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)用于结合整体设计、真实行为和变更上下文审查。具体项目继续按自己的语言、运行时和接口语义判断。

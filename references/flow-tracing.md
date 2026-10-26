@@ -1,55 +1,36 @@
-# Trace a business flow from evidence
+# 从实际路径追踪语义与系统责任
 
-Use this playbook when behavior crosses modules, an asynchronous boundary, a state machine, storage, or an external service.
+用于跨模块、异步、持久化、外部服务或多套实现影响行为的任务。先恢复相关架构与契约，再展开本页；普通局部修改按需要选用。
 
-## 1. Start from the observable behavior
+## 先找到实际入口
 
-Write one sentence describing the trigger and expected outcome. Search user-visible text, API route, event name, log message, or known symbol first. Use rg -n for content and rg --files to locate candidates. Read small ranges around matches; do not dump whole directories into context.
+用 `rg --files` 定位候选文件，用 `rg -n` 搜索界面文本、API 路由、事件名、配置键、日志或符号。阅读命中附近完整逻辑，再查调用者与消费者。沿别名、注册、依赖注入和动态加载确认运行时选择；代码生成、反射或外部 SDK 需要继续读取对应生成源、注册配置或接口语义。
 
-## 2. Follow control flow and data flow
+对具体实例固定业务身份、版本和环境。先从架构猜测责任边界，再用源码及运行证据修正；从局部发现新的写入者或异步任务时，回到相关模块关系。
 
-For each meaningful boundary, record only details that affect behavior:
+## 同时追控制、数据与生命周期
 
-- Entry: who calls it, under which state or event.
-- Input/output: what object or payload enters and leaves; which fields change or disappear.
-- State: who owns the authoritative value, who may write it, and when it resets.
-- Effects: database transaction, queue, filesystem, network, SDK, device, or media operation.
-- Timing: synchronous call, callback, event stream, task, retry, timeout, cancellation, or background lifecycle.
-- Completion: what proves the consumer completed the work, rather than merely accepting a request.
+| 关系 | 要找的具体证据 |
+| --- | --- |
+| 控制 | 谁触发，条件分支和配置如何选择实现，谁负责下一步 |
+| 数据 | 输入来源、身份与版本，字段转换、单位、序列化，最终消费者 |
+| 状态 | 权威值在哪里，全部相关写入、重置、删除、缓存及持久化路径 |
+| 生命周期 | 创建、交接、等待、重试、取消、提交、完成、释放与恢复 |
+| 承诺 | 返回、ack、回调或事件各说明哪一步完成，调用方如何使用 |
+| 资源 | 线程或任务、连接、缓冲、队列与锁由谁持有，何时释放 |
 
-Search writes as carefully as reads. A field declaration does not establish state ownership or lifecycle. Find assignments, mutations, resets, persistence writes, and recovery paths relevant to the task.
+保留有行为意义的边界，一行可以覆盖多个简单函数。必要时画序列图或状态图：标出参与者、状态所有者、同步或异步交接、确认和失败分支。重复排查的链路可保存到 `flows/` 或项目已有位置。
 
-## 3. Keep a compact trace
+## 把故障解释变成可区分的观察
 
-Use one row per meaningful boundary, not one row per method.
+以“假如原因是 X，应在边界 Y 看到 Z”组织调查。例如写入已提交而页面仍旧，检查读路径和后续覆盖；入队后仍在等待处理结果，追消费选择、worker 状态和完成反馈。固定其余相关条件，优先检查能够区分当前解释的最小边界。
 
-| Boundary | Input → output | State owner / side effect | Evidence |
-|---|---|---|---|
-| Trigger / entry | Event → request | Caller or session | path + symbol |
-| Decision | Request → branch / command | Decision state | path + symbol |
-| Execution | Command → external effect | SDK / service | path + symbol |
-| Persistence | Result → durable record | Repository / database / object store | path + symbol |
-| Completion / recovery | Ack, failure, retry or restore | State owner | path + symbol |
+并发故障需要恢复先后关系：哪个读取基于旧快照、哪个写入晚到、取消何时被观察、锁或事务覆盖什么范围。请求身份、版本和执行时刻应共同解释日志。时钟来源及日志采样也影响判断。
 
-Add nodes only when they explain a transformation, ownership boundary, asynchronous handoff, or failure mode.
+网络或调用方超时后，追查执行端和持久化状态；重试与取消各自有契约。共享字段出现新写入者时，检查其他读写路径的假设。性能问题沿存储、计算、通信联合定位等待和代价转移。
 
-## 4. Explain failures as competing mechanisms
+## 回到修改与验证
 
-For each plausible explanation, identify the observation it explains, evidence supporting it, evidence that would distinguish it from alternatives, and the cheapest safe probe.
+说明错误发生的条件、责任位置和修复为何恢复契约。阅读实际调用方与消费者，检查配置、数据版本、后台生命周期和最相关的失败恢复。验证选择由这些机制决定，按[任务路由](task-routing.md#验证与交付)执行。
 
-Prefer read-only inspection and narrow instrumentation before changing code. For nondeterministic failures, preserve timing, state transitions, request IDs and relevant input/output at each boundary. Do not infer causality from adjacent log lines alone.
-
-## 5. Verify the real contract
-
-Read the caller and consumer as well as the implementation. Inspect configuration and SDK semantics when code delegates behavior externally. Tests are evidence for paths they execute; a passing suite does not prove an untested production path.
-
-After a change, validate the edited path, the handoff contract, and the most relevant failure/recovery behavior. If full integration cannot run, name the unverified boundary explicitly.
-
-## 6. Promote only reusable discoveries
-
-Create or update a flow note when the flow is likely to be revisited, has non-obvious state ownership, crosses multiple modules, or explains a recurring incident. A one-off local fix with no durable architectural implication usually needs no new memory file.
-
-
-## Testing follows architecture, not ritual
-
-After tracing the real flow, decide whether a test adds meaningful evidence. Do not add tests that only assert a symbol exists, a field has a value, a mock was called, or a happy-path response is returned. When a test is justified, align it with the actual architecture: preserve the relevant module contract, exercise the state transition or cross-module handoff at risk, and assert the externally meaningful behavior. Avoid building a parallel test-only flow that bypasses the code boundary implicated by the failure. Prefer semantic source tracing when the behavior is straightforward and existing validation is adequate; for device, external-service, or timing-dependent behavior, explicitly identify what unit/integration tests cannot establish.
+局部解释改变边界、状态归属、实现选择或共同约束时，更新架构及相关图；仅补充当前任务事实时更新 STATE 或任务记录。证据路径和符号靠近重要判断，图和源码之间保留可追踪入口。

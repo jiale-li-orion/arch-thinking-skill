@@ -1,58 +1,56 @@
-# Task routing: design-led implementation, debugging, and delivery
+# 根据任务与系统条件选择操作策略
 
-This reference separates work by the state of the product and the user's current goal. Select the path that matches the evidence; do not apply all paths to every task.
+先明确当前任务，再判断相关系统掌握程度。新项目、成熟项目及大型遗留库均可执行下列任务；系统复杂度决定需要补充多少定位与兼容分析。工程判断方法见[工程思维](../assets/workspace/工程思维.md)。
 
-## Design-led implementation
+| 当前任务 | 首要动作 | 完成依据 |
+| --- | --- | --- |
+| 设计已批准，开始或继续实现 | 恢复契约，对照真实代码补齐端到端行为 | 验收成立，约束得到落实 |
+| 功能反馈或故障 | 固定具体实例，解释预期与实际的偏差 | 原问题与相关恢复行为得到验证 |
+| 重构、替换或迁移 | 划定保留契约，安排兼容和切换 | 行为稳定，迁移目标与数据处置清楚 |
+| PR、发布与运维 | 核对变更、运行版本、环境和交付环节 | 对应交付状态有实际依据 |
 
-Use when the user has already completed or approved the PRD / Tech Design in chat, a document, an issue, or a linked source of truth.
+实现中发现故障可进入 Debug，调查发现关系缺口可补充架构理解；已有有效进展随任务继续继承。
 
-1. **Recover the contract.** Read the supplied design and acceptance criteria. If they are in the conversation, use that content directly; do not assume the coding repository must contain a duplicate PRD. Inspect only the existing code, repository instructions, and relevant memory needed to map the contract.
-2. **Map criteria to implementation.** For each required behavior, identify the owning module, entry point, state owner, consumer, and validation path. Reuse existing patterns and dependencies unless the design explicitly changes them.
-3. **Check the implementation gap.** Distinguish already implemented, partially implemented, missing, and contradictory behavior. Do not rewrite working code merely to make it resemble a new architecture diagram.
-4. **Implement in the user's requested scope.** Make the smallest coherent change. Preserve existing behavior outside acceptance criteria. Ask only when the design contains a contradiction, omits a decision that blocks implementation, or conflicts with a material repository constraint. Do not ask again about settled requirements.
-5. **Verify against the contract.** First trace the implementation semantics and the real module boundaries. Do not add a test merely to assert that a method, field, mock call, or happy-path return exists. If a test materially reduces risk, make it isomorphic to the affected architecture: exercise the relevant module contract and meaningful state transition, and assert an observable acceptance criterion. Prefer one behavior-representative test over shallow test accumulation. For trivial changes, existing checks and code-semantic inspection may be sufficient. If a criterion cannot be tested in the available environment, state exactly which boundary remains unverified.
-6. **Update durable knowledge only when warranted.** Record a newly discovered boundary, state owner, non-obvious contract, or reusable failure mode. Routine implementation progress belongs in the PR/task record, not a new architecture note.
+## 按设计实施
 
-The design is the specification of intended behavior; current source is evidence of actual behavior. When they disagree, preserve that distinction and report the gap instead of silently rewriting the design to fit the code.
+1. 从 chat、设计文档或 issue 恢复行为、架构决策、验收及自由度。已有正式入口直接引用；仅在会话中存在的关键契约写入 STATE 的接续部分，保留来源和原义。
+2. 将每项行为映射到入口、职责、状态所有者及消费者。区分已实现、部分实现、待实现和与设计冲突的部分，复用现有能力。
+3. 先形成可落地的完整路径，再按依赖完成修改。涉及持久化、权限、取消、错误处理或界面状态时，沿真实路径补齐相关责任。使用项目既有风格、依赖和操作流程。
+4. 对影响产品行为、架构承诺或数据兼容的冲突，说明具体事实、影响与建议后澄清；独立且已授权部分继续推进。
+5. 按契约验证并完成当前授权范围内的交付。实现事实和设计意图分别维护；任务进度进入 STATE 或现有任务记录。
 
-## Feedback and debugging
+## 反馈与 Debug
 
-Use when a user reports that a newly implemented feature is wrong, incomplete, flaky, or different from expected behavior.
+先取得已有反馈中的预期、实际、触发条件、版本、环境和发生频率。使用提供的日志、截图、请求或对象身份，结合[语义追踪](flow-tracing.md)恢复实际执行链路。
 
-1. Capture the concrete observation: expected result, actual result, triggering conditions, environment, and frequency. Reuse logs or screenshots already supplied; do not ask the user to repeat them.
-2. Locate the feature entry point and trace the actual implementation through decisions, state mutations, async boundaries, persistence, external calls, and the final consumer.
-3. Compare the observed path with the intended contract and any prior implementation. Identify the earliest boundary where the values, state, timing, or side effect diverge.
-4. Keep competing mechanisms explicit until evidence distinguishes them. Prefer targeted reads, existing logs, narrow instrumentation, or a minimal reproduction over speculative multi-file edits.
-5. Make a targeted correction after locating the responsible mechanism. If an urgent mitigation is needed before root cause is fully established, label it as mitigation and keep the investigation open.
-6. Trace the actual semantics before deciding on tests. Add tests only when they meaningfully constrain the failure mechanism or prevent a plausible regression; align them with the architecture boundaries and state transitions involved. Avoid shallow validation tests and over-mocked tests that can pass while the reported behavior is still broken. Validate the reported case and relevant recovery path using the strongest available evidence, and name any unverified runtime boundary. Check neighboring call sites and state writers when the fix changes shared behavior.
-7. Report the root cause with evidence, the exact change, verification performed, residual uncertainty, and PR status. Do not equate tests passing with production verification when the failing boundary was not exercised.
+围绕能解释症状的具体机制选择区分证据：调用路径、状态写入、时间顺序、配置或版本。使用定点源码阅读、已有日志、必要的窄范围观测及复现。日志中的相邻事件还需身份与顺序关系支持。
 
-## Legacy repository / unclear intent
+修复前说明偏差怎样产生、责任位于哪里、修改影响哪些调用者与状态。根因证据仍有限时准确保留推断地位；紧急缓解明确作用和适用条件，后续调查直接承接。完成后验证报告场景及最相关的恢复、重试或相邻调用路径。
 
-Use when no reliable design contract is available or the repository has accumulated undocumented behavior.
+## 大型遗留库与多套实现（条件加载）
 
-Start from the observable behavior and source. Recover the smallest relevant business flow before proposing architecture changes. Search symbols and references with rg / grep, then trace writes and lifecycle transitions. Read caller and consumer, not only the method that looks suspicious. Treat names, comments, tests, and old docs as evidence with different confidence, not as unquestioned truth.
+当同类实现并存、实际调用难以定位、旧数据或隐含兼容条件影响改动时使用。先建立当前任务的有效路径，再逐步补充周边系统模型。
 
-If intended behavior is genuinely unknown, describe the competing interpretations and ask only the decision that changes implementation. Avoid speculative repository-wide refactors during incident diagnosis.
+**定位实际生效版本。** 从用户入口、注册表、依赖注入、配置开关、构建目标及部署版本追到实现；向下连接真实存储和消费者。代码存在、具有调用者、当前环境会执行，各自给出依据。测试也按其入口和配置确定代表范围。
 
-## Delivery and operations
+**对照实现而后复用。** 对相关候选列明职责、调用条件、输入输出、写入者及兼容约束；记录到已有模块或链路正文。优先直接复用契约一致的能力；边界差异用显式适配；业务语义分化时共享稳定机制并保留差异的归属。
 
-After a code change:
+**约束并存。** 引入新路径时，明确选择入口、状态所有权、原调用方行为、并存原因和收敛条件。共同读写同一数据时，追查版本、默认值、并发和后台任务的影响。公共接口变化沿调用方反向查找，数据变化沿读写者双向查找。
 
-- Trace the changed behavior through its owning module and relevant adjacent boundaries before choosing checks. Tests are evidence, not a substitute for semantic understanding.
-- Inspect the diff and working tree; confirm no unrelated files or generated artifacts were changed.
-- Run checks that exercise the changed contract and the most relevant adjacent path.
-- Follow existing branch and PR conventions. Summarize behavior changed, evidence, tests, limitations, and rollback implications.
-- Open or update a PR when requested or when it is the repository's established delivery step. Do not claim a PR is merged, deployed, or healthy without checking.
-- For deployment, migrations, production toggles, deletion, or other high-impact operations, verify the target and rollback path and obtain explicit authorization where required.
-- When a user reports a post-deployment issue, switch back to Feedback and debugging; the previous successful build is not evidence that the production lifecycle works.
+**选择修复边界。** 在错误产生的责任处恢复契约，按真实依赖覆盖受影响路径。局部故障调查围绕相关链路推进；发现共同错误机制后再扩大修复范围。历史行为的保留依据来自用户契约、真实消费者和数据约束；偶然实现行为标明事实与待决定的兼容价值。预期行为存在多个合理解释且选择会改变产品结果时，列出具体差异和推荐方案，向用户澄清这一项决策。
 
-## Lightweight task classification
+**结束调查的条件。** 已能定位有效路径、解释故障或实现差距、说明修改边界及关键影响时进入修改。剩余疑点若影响正确性，继续定点取证；其余按实际重要性进入当前任务记录。
 
-Ask internally:
-- Is the intended behavior already specified and approved? → Design-led implementation.
-- Is there a concrete mismatch between expected and actual behavior? → Feedback and debugging.
-- Is the intended behavior or state ownership unclear? → Legacy repository exploration.
-- Is the change implemented and the task now about review, PR, release, or recovery? → Delivery and operations.
+## 重构与演进
 
-A task can transition between paths. For example, implementation may expose a design ambiguity, or a production report may reveal a previously undocumented state transition. Switch paths when the evidence changes; do not begin the entire workflow from the start.
+先固定对外行为、数据格式、状态转换及性能约束，再划定替换边界。检查旧数据、旧客户端和混合版本共存条件；需要迁移时定义顺序、切换信号、恢复条件及旧路径处置。分步交付要保证每一步具有可解释的运行状态。
+
+收敛多套实现时，先恢复它们各自承担的契约，决定共同机制与真实差异。新结构的价值体现为职责更清楚、路径更可追踪以及变更影响更可控。
+
+## 验证与交付
+
+验证策略遵循工程思维中的六条用户原始规则。先解释实际语义与受影响架构，再执行项目要求的检查，并选择能检验目标行为的证据。相关检查通过后，新增验证由新改动、失败或具体疑点触发。
+
+检查 diff、工作树及关联配置，保留用户同期改动。PR 描述说明具体触发、前后行为、修复机制、覆盖范围与验证事实；按现有分支和评审流程执行。代码完成、PR 创建、合并、部署、健康恢复分别核实和汇报。
+
+发布或运维读取实际 runbook，核对目标环境、提交或制品版本、配置、迁移顺序、观测信号和恢复路径。执行权限沿用户授权与项目规则判断。后台任务记录实际句柄、产物和接续方式；线上反馈重新进入对应调查路径。

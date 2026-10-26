@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -13,117 +14,10 @@ EVIDENCE_RE = re.compile(
     r"(?:\s+at=([0-9a-fA-F]{7,40}))?"
 )
 
+TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / "assets" / "workspace"
 TEMPLATES = {
-    "README.md": """# Architecture memory
-
-This directory stores the reusable model of how this system behaves. It is the workspace memory index, not a task diary.
-
-## Knowledge dependencies
-
-~~~mermaid
-flowchart TB
-    TASK["External task contract<br/>Approved PRD / Tech Design from chat"]
-    SOURCE["Source evidence<br/>Code / config / API / Git / runtime feedback"]
-    INDEX["README.md<br/>Index and task-to-note routing"]
-    RULES["AGENTS.md<br/>Stable read-back and update protocol"]
-    ARCH["ARCHITECTURE.md<br/>Global system model"]
-    STATE["STATE.md<br/>Current understanding and open questions"]
-    FLOW["flows/<name>.md<br/>Optional cross-module lifecycle"]
-    RECORD["Task / PR / operations record"]
-
-    TASK --> INDEX
-    SOURCE --> ARCH
-    SOURCE --> FLOW
-    INDEX --> RULES
-    RULES --> ARCH
-    RULES --> STATE
-    ARCH <--> STATE
-    ARCH <--> FLOW
-    FLOW -. "when the global model changes" .-> STATE
-    RECORD -. "reusable findings only" .-> STATE
-~~~
-
-The arrows show knowledge dependencies and feedback, not a mandatory sequence for every task.
-
-## Read by task
-- Start with AGENTS.md for the stable maintenance protocol and re-read triggers.
-- Read ARCHITECTURE.md and STATE.md when the task depends on system-level behavior.
-- Read a flow note only when the task touches that lifecycle.
-- For approved-design implementation, use the supplied design contract and the relevant system notes; do not create a duplicate PRD here.
-- For a reported bug, follow the observed behavior through the relevant flow and evidence.
-
-## Ownership
-AGENTS.md owns maintenance rules; ARCHITECTURE.md owns global structure; STATE.md owns current understanding and unresolved questions; each flow note owns one local lifecycle. Keep one authoritative home for each claim.
-""",
-    "AGENTS.md": """# Architecture memory maintenance rules
-
-These rules govern this knowledge directory. Keep the mechanism stable and update the system model as evidence changes.
-
-## Task contracts
-- When an approved PRD / Tech Design is supplied from chat, treat it as the intended behavior and acceptance contract. Map it to the current code; do not reopen settled design work or require duplicate PRD files in this repository.
-- When feedback reports a bug, compare expected and actual behavior and trace the real execution path before choosing a fix.
-- For legacy behavior with unclear intent, recover the mechanism from source and runtime evidence before proposing broad refactors.
-- Follow existing PR, release, and operations conventions; obtain authorization for high-impact production actions.
-
-## Source of truth
-Current source, configuration, runtime evidence and user-approved design contracts are primary evidence. Notes are navigation and accumulated reasoning; verify relevant claims before changing code. When approved design and actual implementation disagree, record the gap rather than silently redefining either one.
-
-## Read-back
-- At entry, read README.md and the relevant repository instructions.
-- For architecture-affecting work, read ARCHITECTURE.md and STATE.md.
-- Before changing a documented flow, read that flow note and inspect current source.
-- When source changes, run the impact command to identify notes that cite changed files; re-read those notes before assuming their claims remain true.
-- A source change triggers review, not automatic invalidation. Confirm semantic impact.
-
-## Update ownership
-- Global boundary, dependency, invariant, or state ownership changed: update ARCHITECTURE.md.
-- Current explanation, competing mechanism, next probe, or investigation focus changed: update STATE.md.
-- One cross-module lifecycle changed: update its flow note.
-- Routine progress and command logs belong in the task / PR record, not new memory files.
-- Trace code semantics before deciding whether tests are needed. Add tests only when they constrain meaningful behavior or materially reduce risk; make test structure isomorphic to the affected architecture modules and business flow.
-- Update the authoritative owner first, then dependent notes only where their conclusions or navigation changed.
-
-## Evidence convention
-Put important claims next to an evidence line. Its fields are `path=src/path/File.java`, `symbol=methodName`, and optional `at=abc1234`.
-
-The path is relative to the source repository, not this knowledge directory. The symbol is an exact identifier or distinctive source string. The optional commit is the revision at which the evidence was checked. Run arch_memory.py check after meaningful updates. Missing evidence is an error; changed evidence is a re-read warning, not automatic proof that the explanation is false.
-
-## Pruning
-Remove or merge notes that no longer change search, explanation, implementation, or verification. Prefer Git history for chronology. Keep snapshots only when they preserve otherwise-lost provenance or explain a meaningful regression. Do not add indexes, diaries, decision logs, or diagrams by default.
-""",
-    "ARCHITECTURE.md": """# Architecture map
-
-Purpose: preserve stable system boundaries and dependency relationships that help a future agent navigate the codebase.
-
-## System boundary
-Describe the system responsibility and external dependencies. Cite evidence for non-obvious claims.
-
-## Modules and dependency direction
-| Module | Responsibility | Entry points / contracts | Depends on |
-|---|---|---|---|
-
-## Durable state and side-effect boundaries
-Record only state owners, persistence boundaries, and external effects that influence multiple flows.
-
-## Invariants and cross-cutting constraints
-Record only rules that materially constrain changes across modules.
-
-## High-value flows
-Link to flows/ notes only when they explain recurring or cross-module behavior.
-""",
-    "STATE.md": """# Current architecture understanding
-
-Replace this note as understanding changes; do not append a session diary.
-
-## Current model
-State the smallest evidence-backed explanation relevant to ongoing work.
-
-## Unresolved questions
-List only questions whose answers could change a diagnosis, design, or next search. Separate observations from inferences.
-
-## Next useful probe
-Name the cheapest probe that best distinguishes the remaining explanations.
-""",
+    name: (TEMPLATE_ROOT / name).read_text(encoding="utf-8")
+    for name in ("README.md", "AGENTS.md", "工程思维.md", "ARCHITECTURE.md", "STATE.md")
 }
 
 
@@ -137,8 +31,13 @@ def git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def note_root(source_root: Path, memory_root: Path | None) -> Path:
-    """Use an external memory repository when supplied; otherwise retain .arch compatibility."""
-    return memory_root.resolve() if memory_root is not None else source_root / ".arch"
+    """Use the chosen workspace documents, retaining existing .arch installations."""
+    if memory_root is not None:
+        return memory_root.resolve()
+    legacy = source_root / ".arch"
+    if legacy.is_dir() and not (source_root / "ARCHITECTURE.md").exists():
+        return legacy
+    return source_root
 
 
 def init_memory(source_root: Path, memory_root: Path | None = None) -> list[Path]:
@@ -147,16 +46,34 @@ def init_memory(source_root: Path, memory_root: Path | None = None) -> list[Path
     created: list[Path] = []
     for name, content in TEMPLATES.items():
         path = target / name
-        if not path.exists():
-            path.write_text(content, encoding="utf-8")
-            created.append(path)
+        try:
+            with path.open("x", encoding="utf-8") as stream:
+                stream.write(content)
+        except FileExistsError:
+            continue
+        created.append(path)
     return created
 
 
-def iter_evidence(memory_root: Path):
+def iter_evidence(memory_root: Path, *, source_root: Path):
     if not memory_root.is_dir():
         return
-    for note in sorted(memory_root.rglob("*.md")):
+    if memory_root.resolve() == source_root.resolve():
+        # A large source repository can contain unrelated Markdown trees. The
+        # default workspace owns root-level notes and optional flows/ only.
+        notes = list(memory_root.glob("*.md"))
+        flows = memory_root / "flows"
+        if flows.is_dir():
+            notes.extend(flows.rglob("*.md"))
+    else:
+        notes = []
+        for directory, children, files in os.walk(memory_root):
+            children[:] = sorted(
+                name for name in children
+                if name not in {".git", "node_modules", ".venv", "__pycache__"}
+            )
+            notes.extend(Path(directory) / name for name in files if name.endswith(".md"))
+    for note in sorted(notes):
         try:
             lines = note.read_text(encoding="utf-8").splitlines()
         except (UnicodeDecodeError, OSError):
@@ -177,7 +94,7 @@ def check_memory(source_root: Path, memory_root: Path | None = None) -> tuple[li
     checked = 0
     is_git = git(source_root, "rev-parse", "--show-toplevel").returncode == 0
 
-    for note, number, (rel_path, symbol, commit) in iter_evidence(notes_root):
+    for note, number, (rel_path, symbol, commit) in iter_evidence(notes_root, source_root=source_root):
         checked += 1
         source = (source_root / rel_path).resolve()
         try:
@@ -244,7 +161,7 @@ def impact_memory(
         changed.add(normalized)
 
     hits: dict[Path, set[str]] = {}
-    for note, _number, (rel_path, _symbol, _commit) in iter_evidence(notes_root):
+    for note, _number, (rel_path, _symbol, _commit) in iter_evidence(notes_root, source_root=source_root):
         if rel_path in changed:
             hits.setdefault(note, set()).add(rel_path)
 
@@ -259,7 +176,7 @@ def main() -> int:
         "--memory-root",
         type=Path,
         default=None,
-        help="separate knowledge directory or small Git repository; defaults to <root>/.arch",
+        help="existing knowledge location; defaults to source root, or existing .arch for legacy workspaces",
     )
     parser.add_argument("--files", nargs="*", default=[])
     args = parser.parse_args()
@@ -276,7 +193,8 @@ def main() -> int:
             for path in created:
                 print(f"CREATED {path}")
         else:
-            print("UNCHANGED: all four core memory files already exist")
+            print("UNCHANGED: all workspace template paths already exist")
+        print("STRUCTURE READY: follow references/initialization.md to restore real system knowledge and task continuity.")
         return 0
 
     if args.command == "impact":
