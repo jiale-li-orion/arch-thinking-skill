@@ -84,7 +84,16 @@ Responsibilities, method dependencies, workspace knowledge, and task execution c
 | [Workspace templates](skills/arch-thinking-skill/assets/workspace/README.md) | README, AGENTS, Engineering Thinking, ARCHITECTURE, and STATE templates; use only the missing parts |
 | [Helper script](skills/arch-thinking-skill/scripts/arch_memory.py) | `init` / `impact` / `check`; mechanical assistance only |
 
-Full-system reconstruction combines system reconstruction, flow tracing, and knowledge maintenance. Local implementation and debugging start with task routing and trace further as actual-path or state uncertainties arise.
+The task determines the delivery route; the current knowledge gap determines which method to load next. The full procedures live in [Task routing](skills/arch-thinking-skill/references/task-routing.md).
+
+| Task entering the Skill | First route | Load further when |
+| --- | --- | --- |
+| Approved design to implement | Recover the contract and finish the actual end-to-end path | Flow tracing for competing implementations or cross-module state; knowledge maintenance for lasting changes |
+| User feedback or production failure | Fix the instance, version, expected behavior, and observed path | Flow tracing for competing causes; knowledge maintenance when the system explanation changes |
+| Refactor, replace, or migrate | Fix the behaviors to preserve, then compare ownership, data, and coexistence | Flow tracing for historical consumers and recovery; knowledge maintenance for changed responsibilities |
+| PR, release, or operations | Check the change, artifact, environment, handoffs, and observed delivery state | Flow tracing for runtime divergence; knowledge maintenance for durable operational knowledge |
+| Full system takeover or design reconstruction | Build entry-point and module coverage, then explain product and technical behavior | Load system reconstruction, flow tracing, and knowledge maintenance together; initialization fills a missing project entry |
+| Workspace initialization or standalone architecture view | Recover project knowledge or the requested system view | Initialization and knowledge maintenance; add flow tracing for source-backed relationships |
 
 System knowledge stays in the project workspace. Designs can originate in chat, documents, or issues; existing assets with the same responsibility remain authoritative and are checked against requirements, code, and versions. Investigate locally according to impact; reconstruct the full system using a module coverage list.
 
@@ -111,15 +120,22 @@ flowchart TB
     end
     EV[Source code configuration Git and runtime evidence]
     CO[Contribution guide and community review]
+    Q{Task and current knowledge gap}
 
     SK --> TH
-    SK --> RT
-    SK --> SR
-    SK --> IN
+    SK --> Q
     SK --> EN
+    Q -->|Approved design, feedback, migration, PR or operations| RT
+    Q -->|Full takeover or design reconstruction| SR
+    Q -->|Workspace entry needs recovery| IN
+    Q -->|Standalone architecture view| KM
+    Q -->|Architecture view needs source evidence| TR
     RT -->|Path or implementation choice needs evidence| TR
+    RT -->|Lasting relationship or task-state change| KM
     SR -->|Coverage needs actual behavior| TR
+    SR -->|Module explanations and diagrams| KM
     IN --> TM --> EN
+    IN --> KM
     IN -->|Full reconstruction| SR
     EN --> AR
     EN --> ST
@@ -138,7 +154,7 @@ flowchart TB
     CO -->|Reviewed method revision| TH
 ```
 
-The Skill supplies reusable judgment and selectively loaded methods. The project entry point binds its own design and state; source evidence corrects the system model, and knowledge maintenance writes the revised explanation back to its owner. With the user's choice, transferable decision methods enter community review and improve the shared method.
+The task selects the delivery method, then a concrete knowledge gap calls for tracing, reconstruction, or maintenance. The project entry point binds its own design and state; source evidence corrects the system model, and knowledge maintenance writes the revised explanation back to its owner. With the user's choice, transferable decision methods enter community review and improve the shared method.
 
 ### Figure 2: How Workspace Documents Connect
 
@@ -161,9 +177,15 @@ The workspace holds actual project knowledge. ARCHITECTURE identifies modules; P
 flowchart TB
     READ[Inherit contract scope and state] --> TASK{Task deliverable}
     TASK -->|System reconstruction| COVER[Entry-point and module coverage]
-    TASK -->|Implementation debug operations| BOUND[Behavior contract and problem boundary]
+    TASK -->|Approved design| DESIGN[Contract to actual end-to-end behavior]
+    TASK -->|Feedback or failure| DEBUG[Instance version and competing causes]
+    TASK -->|Refactor or migration| MIGRATE[Preserved behavior data and coexistence]
+    TASK -->|PR release or operations| SHIP[Artifact environment and delivery state]
     COVER --> MODEL[Global model guides local tracing]
-    BOUND --> MODEL
+    DESIGN --> MODEL
+    DEBUG --> MODEL
+    MIGRATE --> MODEL
+    SHIP --> MODEL
     MODEL --> FACT{Actual path and key impacts supported by evidence}
     FACT -->|Critical gap| MODEL
     FACT -->|Current-state reconstruction| DOC[Module explanations diagrams and walkthrough]
