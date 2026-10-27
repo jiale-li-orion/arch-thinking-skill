@@ -19,3 +19,5 @@ description: Reconstruct existing software systems from code and maintain archit
 | 单独要求架构图、模块图或变更影响解释 | 读取[知识维护](references/knowledge-maintenance.md)，沿相关实际路径读取[语义追踪](references/flow-tracing.md)；覆盖全系统时同时读取[系统重建](references/system-reconstruction.md)。 |
 
 设计来自 chat、文档或 issue 均可，继承已确定的行为、约束和验收。沿真实入口、实现选择、状态读写及消费者恢复现状；用 rg / rg --files 定位线索，随源码证据调整查询。旧文档和规范化外观提供线索，当前行为由实际路径及适用版本确认。局部任务按相关依赖深入；全系统重建按覆盖清单推进。验证针对真实契约和故障机制，文档按唯一职责更新。
+
+实践中发现足以改变工程决策的通用方法增量时，按[知识维护的经验蒸馏](references/knowledge-maintenance.md#从实践识别可迁移经验)提炼；可在当前交付中简短邀请使用者贡献。普通任务沿既有流程完成，社区贡献由使用者选择，公开提交按具体授权执行。

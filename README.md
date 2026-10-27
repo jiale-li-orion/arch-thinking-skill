@@ -72,7 +72,9 @@
 
 具体项目的认识写回架构、模块或任务正文；具有迁移价值的经验，提炼成“触发条件 → 判断依据 → 行动选择 → 适用范围”，脱敏后进入相应方法。归约时从保留内容重新推出原来的判断，并用新的需求、故障或恢复情形检验其更新能力。已经明确的用户规则与设计承诺按原有权限维护。
 
-**蒸馏的尺度，是经验还能指导多少真实选择。** 欢迎沿用这套结构，培育属于自己的工程方法，并把经实践打磨的认识带回社区。
+**蒸馏的尺度，是经验还能指导多少真实选择。** 当实践带来重要的方法增量，Agent 可以简短指出贡献候选，帮助你把判断转折提炼成可分享的机制。你决定留在本地，或将脱敏后的经验带回社区。
+
+**真实任务 → 本地蒸馏 → 使用者选择贡献 → Issue／方法 PR → 社区评审与归约 → 共享方法更新。** 项目事实留在自己的工作区，可迁移认识进入共同方法。欢迎沿用这套结构，培育自己的工程判断，并通过[贡献指南](CONTRIBUTING.md)让下一位构建者从更好的起点出发。
 
 ## 适用场景
 
@@ -171,6 +173,7 @@ dsh 在再次加载 Skill 时读取当前正文；开启新会话可从更新后
 | --- | --- |
 | [SKILL](skills/arch-thinking-skill/SKILL.md) | 接管、公共方法和按需路由 |
 | [AGENTS](AGENTS.md) | 维护本 skill 的职责与原始规则 |
+| [贡献指南](CONTRIBUTING.md) | 使用者选择贡献后，准备 Issue／方法 PR；维护者评审并归约到现有方法 |
 | [工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md) | 从隐含契约、组合解释与归因推导修改边界的完整方法；初始化后由工作区持有 |
 | [任务路由](skills/arch-thinking-skill/references/task-routing.md) | 按任务阶段选择交付策略，按理解缺口切换全局分析、局部取证与实施 |
 | [系统重建](skills/arch-thinking-skill/references/system-reconstruction.md) | 全面梳理、反推 PRD／技术设计或逐模块展开；负责覆盖、细节深度、产品技术映射与完成判据 |
@@ -198,6 +201,10 @@ flowchart TB
     SR -->|交付依赖| KM[知识维护 图与正文]
     TR -->|关系或判断变化| KM
     IN --> KM
+    SK -->|发现可迁移增量| KM
+    KM -->|使用者选择贡献| CO[贡献指南 脱敏与授权提交]
+    CO --> RV[社区评审 归约到现有方法]
+    RV --> TH
 ```
 
 任务决定交付责任，语义追踪恢复实现依据，知识维护承接图与正文。局部任务沿相关关系深入；全面梳理由系统重建补上逐模块覆盖和完成判据。
@@ -279,9 +286,11 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 ## 反馈与贡献
 
-欢迎提交真实任务中的改进：[Issues](https://github.com/jiale-li-orion/arch-thinking-skill/issues) · [Pull requests](https://github.com/jiale-li-orion/arch-thinking-skill/pulls)。说明任务阶段、Agent 实际读取的内容、判断在哪一步偏离，以及建议怎样改变工程选择；提交前脱敏源码、日志和环境信息。
+**当一次实践改变了你的工程判断，欢迎把这个转折带回社区。**
 
-方法修改沿对应权威正文进行，入口和 README 维护导航。保留机制、适用条件及证据，按变更涉及的语义与行为验证。仓库维护规则见 [AGENTS.md](AGENTS.md)。
+现象与机制仍有分歧时，用 [Issue](https://github.com/jiale-li-orion/arch-thinking-skill/issues) 一起分析；已有明确的条件、依据和修订方案时，用 [PR](https://github.com/jiale-li-orion/arch-thinking-skill/pulls) 改进对应方法。Agent 可以帮助准备材料，具体公开内容由使用者授权。社区把有效增量归入现有机制，让方法随着实践持续成熟。
+
+准备与评审方法见 [CONTRIBUTING.md](CONTRIBUTING.md)，仓库维护职责见 [AGENTS.md](AGENTS.md)。
 
 ## 支持开源与传播
 

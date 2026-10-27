@@ -1,6 +1,6 @@
 {
   "name": "arch-thinking-skill",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reconstruct legacy systems from code and maintain source-backed architecture understanding for implementation and debugging.",
   "author": {
     "name": "jiale-li-orion",
