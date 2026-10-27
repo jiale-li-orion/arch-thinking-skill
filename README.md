@@ -1,21 +1,121 @@
-# arch-thinking-skill
+# Architecture Thinking
 
-面向软件系统的理解、实现与演进。全局架构指导局部语义追踪，代码和运行反馈修正系统模型；阶段策略完成当前任务，工作区文档使理解能够持续接续。
+[![Codex](https://img.shields.io/badge/Agent-Codex-111827)](#codex)
+[![dsh](https://img.shields.io/badge/Agent-dsh-4D6BFE)](#dsh)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-适用于全系统现状梳理、PRD 与技术设计重建、按批准设计实施、功能迭代、Debug、重构、PR 和运维。大型遗留库需要辨认多套实现、恢复隐含契约、解释跨模块恢复并把握修改边界。
+**让 Agent 解释系统怎样运行、判断应该改哪里，并在下一次会话接着做。**
 
-## 安装到 Codex
+`arch-thinking-skill` 为 **Codex 和 dsh（DeepSeek Harness）** 提供软件系统理解、实现与演进的方法。它把全局架构、局部代码语义、故障归因和工作区记忆连接起来：先继承设计与当前状态，沿真实路径形成判断，再完成修改、验证和交付，并把有复用价值的认识写回项目。
 
-本仓库同时提供 [Codex 插件包](.codex-plugin/plugin.json)和可单独安装的 [Agent Skill](skills/arch-thinking-skill/SKILL.md)。安装插件：
+适用于新功能实施、系统接管、Debug、重构、PR 和运维。面对二十万行以上的遗留系统，重点恢复多套实现的实际选择、隐含契约、状态所有权与变更影响；面对已经批准的 PRD 和技术设计，重点沿既定契约把完整业务链路做好。
+
+[核心亮点](#核心亮点) · [适用场景](#适用场景) · [安装与更新](#安装与更新) · [开始使用](#开始使用) · [方法导航](#渐进加载与职责) · [论文参考](#论文与工程实践参考)
+
+## 核心亮点
+
+| 能力 | Agent 具体怎样工作 | 你能够得到什么 |
+| --- | --- | --- |
+| **全局理解 ↔ 局部追踪** | 从入口、职责、状态归属选择搜索方向；读到新写入者、旁路或配置分支后修正系统模型 | 能解释当前行为、指导下一处修改的架构理解 |
+| **从代码恢复隐含契约** | 对照调用方的使用方式、实现的前提和消费者的依赖，追同一业务对象的状态与生命周期 | 散落在多个模块里的责任与约束，以及复用、适配的依据 |
+| **归因与修改边界一起推导** | 连接触发条件、实际路径、状态变化与用户观察；比较会导致不同修复选择的机制 | 原因解释、区分证据和最小完整修改的范围 |
+| **给人类可追溯的系统现状** | 架构图、模块图、时序和状态图链接源码与配置，关键关系标明运行条件和依据 | 能沿图追问、检查影响并作出决策的系统说明 |
+| **Skill 与工作区记忆一体** | 用 README／AGENTS 绑定入口，ARCHITECTURE 保存系统解释，STATE 保存当前契约与下一动作 | 上下文压缩或换会话后可以继续使用的项目知识 |
+| **高保真更新知识** | 保留关键判断的成立条件、证据和后继事件区别；新写入者或部署变化触发相关判断回读 | 能继续指导后续需求、故障和迁移的记忆 |
+| **语义优先的有效验证** | 先解释代码行为，再按实际架构、模块交接和状态转换选择验证；复用有效的现有检查 | 与真实契约相对应的验证依据和明确交付状态 |
+
+日常工具是 **rg／grep、源码、Git、普通 Markdown 和必要的运行观测**。入口保持简洁，具体方法随任务渐进加载；图与详细文档按实际理解和接续需要维护。完整判断方法见[工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md)。
+
+## 适用场景
+
+| 你的任务 | Skill 的工作重点 | 交付落点 |
+| --- | --- | --- |
+| PRD／技术设计已写好，开始或继续实现 | 继承设计决策，对照现有能力，沿入口到最终消费者补齐业务行为 | 完整实现、相关验证及当前授权范围内的交付 |
+| 接手大型系统，文档陈旧或缺失 | 建立模块覆盖，恢复产品规则、模块内部机制及跨模块关系 | 带依据的系统总览、模块说明和按需恢复的 PRD／技术设计 |
+| 线上反馈、跨模块 Bug、多套实现并存 | 固定实例与版本，追实际生效路径，用竞争解释决定定点取证 | 原因及触发条件、修复责任、兼容影响与结果 |
+| 复用旧逻辑、重构或迁移 | 比较行为契约，追共享状态、旧数据、在途任务及版本共存 | 复用／适配／独立责任的选择，以及可解释的迁移过程 |
+| 新会话接管、长期迭代 | 恢复当前解释、设计约束、真实进展和下一动作 | 可直接继续工作的上下文与证据入口 |
+
+## 安装与更新
+
+维护的 Agent 支持范围为 **Codex 与 dsh**。两端共用 [`skills/arch-thinking-skill/`](skills/arch-thinking-skill/) 的正文、参考资料和模板，项目知识保存在目标工作区。基础阅读使用 Agent 的文件与命令工具；辅助脚本使用 Python 3，代码检索优先使用 ripgrep。
+
+### Codex
+
+使用 [Codex 插件包](.codex-plugin/plugin.json)：
 
 ```bash
 codex plugin marketplace add jiale-li-orion/arch-thinking-skill
 codex plugin add arch-thinking-skill@arch-thinking-skill-marketplace
 ```
 
-只安装 Skill 时，在 Codex 中使用 `$skill-installer`，指定 `https://github.com/jiale-li-orion/arch-thinking-skill/tree/main/skills/arch-thinking-skill`。本地开发可将 `skills/arch-thinking-skill/` 链接到 `~/.codex/skills/arch-thinking-skill/`。安装后重启 Codex，让新会话发现 Skill。仓库根目录的 README 与 AGENTS 面向维护者；安装内容位于 `skills/arch-thinking-skill/`，工作区初始化按下文脚本及当地系统资料完成。
+也可在 Codex 中使用 `$skill-installer`，给出独立 Skill 地址：
 
-许可见 [MIT License](LICENSE)。仓库发布内容由 Git 跟踪；本地归档按当地 `.gitignore` 排除。
+```text
+https://github.com/jiale-li-orion/arch-thinking-skill/tree/main/skills/arch-thinking-skill
+```
+
+选择一种安装方式即可。插件安装状态可用 `codex plugin list --json` 核对。安装后开启新会话，在技能列表中选择 `arch-thinking-skill`，或明确要求使用它处理当前任务。
+
+插件更新：
+
+```bash
+codex plugin marketplace upgrade arch-thinking-skill-marketplace
+codex plugin add arch-thinking-skill@arch-thinking-skill-marketplace
+```
+
+独立 Skill 安装按其安装位置更新完整目录。更新后开启新会话，让 Agent 读取当前版本。
+
+### dsh
+
+通过 dsh 的文件系统 Skill 加载器使用同一份 Skill。下面适用于 macOS／Linux shell：
+
+```bash
+mkdir -p "$HOME/.local/share/agent-skills"
+git clone https://github.com/jiale-li-orion/arch-thinking-skill.git \
+  "$HOME/.local/share/agent-skills/arch-thinking-skill"
+mkdir -p "${DSH_HOME:-$HOME/.dsh}/skills"
+ln -s "$HOME/.local/share/agent-skills/arch-thinking-skill/skills/arch-thinking-skill" \
+  "${DSH_HOME:-$HOME/.dsh}/skills/"
+```
+
+加载后的目录对应 `~/.dsh/skills/arch-thinking-skill/SKILL.md`；设置 `DSH_HOME` 时使用对应根目录。也可将完整 `skills/arch-thinking-skill/` 文件夹复制到该位置，或放入目标项目的 `.dsh/skills/`。保留 `references/`、`assets/` 和 `scripts/`，使按需读取的相对路径完整可用。
+
+dsh profile 需要具备 `dsh-skill`、`dsh-skill-filesystem` 与 `dsh-tool-skill`。加载器按根目录的直接子目录发现 Skill；使用上面指向内部 Skill 目录的链接。进入目标项目的 dsh 会话后，发送：
+
+```text
+/arch-thinking-skill 按照已有技术设计继续实现，并维护当前架构与任务状态。
+```
+
+更新链接指向的仓库：
+
+```bash
+git -C "$HOME/.local/share/agent-skills/arch-thinking-skill" pull --ff-only
+```
+
+dsh 在再次加载 Skill 时读取当前正文；开启新会话可从更新后的正文重新接管。使用复制安装时同步更新整个 Skill 目录。加载规则见 dsh 官方的[目录发现](https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/skill/skill-filesystem/README.md)与[调用方式](https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/skill/tool-skill/README.md)。
+
+## 开始使用
+
+在 Codex 中选择该 Skill，或在请求中写明“使用 arch-thinking-skill”；在 dsh 中使用 `/arch-thinking-skill`。随后给出目标、已有材料和授权范围，例如：
+
+**按设计实施**
+
+> 使用 arch-thinking-skill。PRD 和技术设计已经确定，请继承这些决策，检查当前实现，复用契约一致的能力，完成剩余业务链路和必要验证，再提交 PR。
+
+**接管大型系统**
+
+> 使用 arch-thinking-skill 接管这个仓库。先建立系统总览和模块覆盖，再逐模块恢复当前产品行为与技术机制。架构图、模块图和正文要能追到源码，并解释正常、恢复及历史分支。
+
+**追踪真实故障**
+
+> 使用 arch-thinking-skill 调查这个反馈。根据请求身份、日志和部署版本追实际生效路径，解释状态怎样走到错误结果，判断修复责任与受影响行为，再完成修复。
+
+**初始化与跨会话接续**
+
+> 使用 arch-thinking-skill 初始化可接续的工作区。沿用已有文档，把系统解释、当前任务和证据入口写实。后续会话从 README、AGENTS、ARCHITECTURE 和 STATE 恢复，再继续当前任务。
+
+同一份工作区知识可由两端继续维护。设计要求、实际实现与运行反馈各自保留依据；Agent 根据当前任务选择读取深度和行动。详细初始化与辅助命令见[初始化与接续](#初始化与接续)。
 
 ## 渐进加载与职责
 
@@ -94,6 +194,8 @@ flowchart TB
 
 用户明确要求初始化，或长期维护、跨模块任务缺少可接续的系统知识时，读取[初始化流程](skills/arch-thinking-skill/references/initialization.md)。脚本补缺文件，Agent 继续填写真实系统图、任务契约、实现差距、证据和下一动作：
 
+下面从本仓库根目录执行；通过插件或独立 Skill 安装时，Agent 使用其实际资源目录中的 `scripts/arch_memory.py`：
+
 ```bash
 python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/repo
 ```
@@ -112,7 +214,7 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 参考材料按其实际研究范围使用。论文提供观察、方法与实验依据，本 skill 将相关认识转化为工程操作；具体证据范围见[语义追踪的方法依据](skills/arch-thinking-skill/references/flow-tracing.md#方法依据与迁移范围)。
 
-本轮近期材料按首次公开时间与发表身份分别标注；操作细节留在对应正文。
+近期材料按首次公开时间与发表身份分别标注；操作细节留在对应正文。
 
 | 近期来源 | 吸收的工程判断 | 正文位置 |
 | --- | --- | --- |
@@ -132,3 +234,15 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 | [ripgrep 官方指南](https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md) | 自动过滤、路径范围、字面匹配与输出选项 | 准确解释搜索覆盖、空结果与截断 |
 
 后续吸收材料时，先判断它改变了哪项工程选择，再修订对应权威正文。来源、证据范围和迁移动作一起保留；方法效果结合目标仓库的真实任务继续校正。
+
+## 反馈与贡献
+
+欢迎提交真实任务中的改进：[Issues](https://github.com/jiale-li-orion/arch-thinking-skill/issues) · [Pull requests](https://github.com/jiale-li-orion/arch-thinking-skill/pulls)。说明任务阶段、Agent 实际读取的内容、判断在哪一步偏离，以及建议怎样改变工程选择；提交前脱敏源码、日志和环境信息。
+
+方法修改沿对应权威正文进行，入口和 README 维护导航。保留机制、适用条件及证据，按变更涉及的语义与行为验证。仓库维护规则见 [AGENTS.md](AGENTS.md)。
+
+首页的信息组织参考 [Superpowers](https://github.com/obra/superpowers) 的工作方式与分平台安装呈现，以及 [Anthropic Skills](https://github.com/anthropics/skills) 的独立 Skill 结构与使用示例。工程方法由本仓库的工程思维和参考文档承接。
+
+## 许可
+
+[MIT License](LICENSE)。发布内容由 Git 跟踪，安装资源位于 `skills/arch-thinking-skill/`，本地归档由 `.gitignore` 排除。
