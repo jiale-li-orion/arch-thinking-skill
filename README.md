@@ -66,7 +66,7 @@ These design approaches can be combined. Architecture Thinking joins **system ex
 
 ## Architecture and Workflow
 
-Responsibilities, method dependencies, workspace knowledge, and task execution connect through three architecture views.
+Responsibilities, method dependencies, workspace knowledge, and task execution connect through three architecture views. The first shows the complete relationship between the Skill and a project workspace; the other two expand document ownership and task execution.
 
 ### Progressive Loading and Responsibilities
 
@@ -88,23 +88,57 @@ Full-system reconstruction combines system reconstruction, flow tracing, and kno
 
 System knowledge stays in the project workspace. Designs can originate in chat, documents, or issues; existing assets with the same responsibility remain authoritative and are checked against requirements, code, and versions. Investigate locally according to impact; reconstruct the full system using a module coverage list.
 
-### Figure 1: How Tasks Load Methods
+### Figure 1: Skill, Workspace, and Knowledge Flow
 
 ```mermaid
 flowchart TB
-    SK[SKILL intake and routing] --> TH[Engineering Thinking shared judgment]
-    SK --> RT[Task routing implementation and delivery]
-    SK --> SR[System reconstruction scope and depth]
-    SK --> IN[Initialization knowledge recovery]
-    RT -->|Complex execution path or selection uncertain| TR[Flow tracing behavior and evidence]
-    SR -->|Current behavior evidence| TR
+    subgraph Method[Reusable Skill methods]
+        SK[SKILL intake and selective routing]
+        TH[Engineering Thinking shared judgment]
+        RT[Task routing by delivery stage]
+        SR[System reconstruction scope and coverage]
+        TR[Flow tracing actual behavior and evidence]
+        IN[Initialization recover project knowledge]
+        KM[Knowledge maintenance diagrams and consolidation]
+        TM[Workspace templates]
+    end
+    subgraph Workspace[Project-owned knowledge]
+        EN[README and AGENTS bind project context]
+        AR[ARCHITECTURE system and module model]
+        ST[STATE current contract and decision]
+        DT[PRD and technical design]
+        FL[Flows identities handoffs and recovery]
+    end
+    EV[Source code configuration Git and runtime evidence]
+    CO[Contribution guide and community review]
+
+    SK --> TH
+    SK --> RT
+    SK --> SR
+    SK --> IN
+    SK --> EN
+    RT -->|Path or implementation choice needs evidence| TR
+    SR -->|Coverage needs actual behavior| TR
+    IN --> TM --> EN
     IN -->|Full reconstruction| SR
-    SR -->|Delivery dependencies| KM[Knowledge maintenance diagrams and text]
-    TR -->|Changed relationship or judgment| KM
-    IN --> KM
+    EN --> AR
+    EN --> ST
+    EN --> DT
+    AR <--> FL
+    DT --> FL
+    ST --> FL
+    TR --> EV
+    EV -->|Corrects relationships and premises| FL
+    TR --> KM
+    SR --> KM
+    KM --> AR
+    KM --> ST
+    KM --> FL
+    KM -->|Transferable decision method, user chooses to share| CO
+    CO -->|Reviewed method revision| TH
 ```
 
-Task type determines delivery responsibility; flow tracing recovers implementation evidence, while knowledge maintenance owns diagrams and authoritative text. Local tasks investigate relevant dependencies; full reconstruction adds module coverage and completion criteria.
+The Skill supplies reusable judgment and selectively loaded methods. The project entry point binds its own design and state; source evidence corrects the system model, and knowledge maintenance writes the revised explanation back to its owner. With the user's choice, transferable decision methods enter community review and improve the shared method.
 
 ### Figure 2: How Workspace Documents Connect
 
