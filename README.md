@@ -16,7 +16,9 @@
 
 It supports feature implementation, system takeover, debugging, refactoring, pull requests, and operations. For legacy systems with hundreds of thousands of lines of code, it emphasizes actual implementation selection, implicit contracts, state ownership, and change impact. Where a PRD and technical design have already been approved, it concentrates on completing the end-to-end behavior specified by those contracts.
 
-[Highlights](#highlights) · [Lightweight Design](#lightweight-design) · [Design Comparison](#design-comparison-with-established-skills) · [Architecture](#architecture-and-workflow) · [Self-Distillation](#self-distillation-and-community-contributions) · [Use Cases](#use-cases) · [Installation](#installation-and-usage) · [References](#scope-and-references)
+[Highlights](#highlights) · [Lightweight Design](#lightweight-design) · [Design Comparison](#design-comparison-with-established-skills) · [Architecture](#architecture-and-workflow) · [Self-Distillation](#self-distillation-and-community-contributions) · [Use Cases](#use-cases)
+
+[Installation and Updates](#installation-and-updates) · [Getting Started](#getting-started) · [Initialization and Continuity](#initialization-and-continuity) · [References](#scope-and-references) · [Support](#support-sharing-and-license)
 
 ## Highlights
 
