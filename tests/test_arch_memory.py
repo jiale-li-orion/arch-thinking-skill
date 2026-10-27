@@ -40,7 +40,7 @@ class ArchitectureMemoryLifecycleTests(unittest.TestCase):
         created = init_memory(self.root, self.memory)
         self.assertEqual(
             {path.name for path in created},
-            {"README.md", "AGENTS.md", "工程思维.md", "ARCHITECTURE.md", "STATE.md"},
+            {"README.md", "AGENTS.md", "engineering-thinking.md", "ARCHITECTURE.md", "STATE.md"},
         )
         self.assertFalse((self.root / ".arch").exists())
 
@@ -106,6 +106,8 @@ class ArchitectureMemoryLifecycleTests(unittest.TestCase):
     def test_existing_legacy_workspace_keeps_its_evidence_and_state(self):
         legacy = self.root / ".arch"
         legacy.mkdir()
+        legacy_method = legacy / "工程思维.md"
+        legacy_method.write_text("# Original project-specific engineering rules\n", encoding="utf-8")
         state = legacy / "STATE.md"
         state.write_text("Existing task and recovery point\n", encoding="utf-8")
         source = self.root / "worker.py"
@@ -115,6 +117,9 @@ class ArchitectureMemoryLifecycleTests(unittest.TestCase):
         )
         init_memory(self.root)
         self.assertEqual(state.read_text(encoding="utf-8"), "Existing task and recovery point\n")
+        self.assertEqual(legacy_method.read_text(encoding="utf-8"), "# Original project-specific engineering rules\n")
+        self.assertFalse((legacy / "engineering-thinking.md").exists())
+        self.assertIn("工程思维.md", (legacy / "AGENTS.md").read_text(encoding="utf-8"))
         self.assertFalse((self.root / "ARCHITECTURE.md").exists())
         self.assertEqual(check_memory(self.root), ([], [], 1))
         hits, errors = impact_memory(self.root, ["worker.py"])

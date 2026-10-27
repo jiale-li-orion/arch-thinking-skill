@@ -19,7 +19,7 @@ python3 scripts/arch_memory.py init --root /path/to/repo
 python3 scripts/arch_memory.py init --root /path/to/repo --memory-root /path/to/repo/docs/architecture
 ```
 
-默认在源码根补 README、AGENTS、工程思维、ARCHITECTURE、STATE；已有旧版 `.arch/` 且根目录缺少 ARCHITECTURE 时自动接续旧位置。已有文件保留原内容。脚本只补缺文件，Agent 随后按职责整合现有索引和指令。自定义命名体系优先定点补内容。
+默认在源码根补 README、AGENTS、engineering-thinking.md、ARCHITECTURE、STATE；已有旧版 `.arch/` 且根目录缺少 ARCHITECTURE 时自动接续旧位置。已有文件保留原内容；若工作区已经使用 工程思维.md，初始化沿用旧文件名，不生成第二份方法正文。脚本只补缺文件，Agent 随后按职责整合现有索引和指令。自定义命名体系优先定点补内容。
 
 ## 从真实材料恢复知识
 

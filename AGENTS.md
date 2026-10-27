@@ -4,13 +4,13 @@
 
 ## 依赖与职责
 
-- README.md 是架构索引与路由图的权威入口。
+- README.md 是英文架构索引与路由图的权威入口；README.zh-CN.md 是对应的中文译本，变更时同步章节、图与命令。
 - CONTRIBUTING.md 负责社区贡献的准备、公开授权与评审归约；涉及贡献处理时读取。
 - SKILL.md 是运行入口，只保留公共机制和渐进加载规则。
 - references/task-routing.md 只负责 Coding 任务阶段与操作策略。
 - references/system-reconstruction.md 负责全系统现状重建的覆盖、产品与技术深度、跨模块映射及交付判据。
 - references/flow-tracing.md 只负责代码语义和跨模块行为追踪。
-- assets/workspace/工程思维.md 保存完整工程判断方法及六条工程判断规则。
+- assets/workspace/engineering-thinking.md 保存完整工程判断方法及六条工程判断规则；已有工作区的工程思维.md 原位保留。
 - assets/workspace/ 其余模板只承担各自工作区职责。
 - references/initialization.md 负责接入、补齐结构和恢复真实知识。
 - references/knowledge-maintenance.md 负责知识职责、图、回读、更新和归约。

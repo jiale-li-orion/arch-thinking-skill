@@ -15,9 +15,11 @@ EVIDENCE_RE = re.compile(
 )
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / "assets" / "workspace"
+METHOD_FILENAME = "engineering-thinking.md"
+LEGACY_METHOD_FILENAME = "工程思维.md"
 TEMPLATES = {
     name: (TEMPLATE_ROOT / name).read_text(encoding="utf-8")
-    for name in ("README.md", "AGENTS.md", "工程思维.md", "ARCHITECTURE.md", "STATE.md")
+    for name in ("README.md", "AGENTS.md", METHOD_FILENAME, "ARCHITECTURE.md", "STATE.md")
 }
 
 
@@ -44,7 +46,14 @@ def init_memory(source_root: Path, memory_root: Path | None = None) -> list[Path
     target = note_root(source_root, memory_root)
     target.mkdir(parents=True, exist_ok=True)
     created: list[Path] = []
+    # An existing Chinese method is the authority for that workspace. Do not
+    # introduce a second copy with conflicting rules during initialization.
+    use_legacy_method = (target / LEGACY_METHOD_FILENAME).is_file() and not (target / METHOD_FILENAME).exists()
     for name, content in TEMPLATES.items():
+        if name == METHOD_FILENAME and use_legacy_method:
+            continue
+        if name in ("README.md", "AGENTS.md") and use_legacy_method:
+            content = content.replace(METHOD_FILENAME, LEGACY_METHOD_FILENAME)
         path = target / name
         try:
             with path.open("x", encoding="utf-8") as stream:
