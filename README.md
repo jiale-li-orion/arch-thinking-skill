@@ -10,7 +10,7 @@
 
 适用于新功能实施、系统接管、Debug、重构、PR 和运维。面对二十万行以上的遗留系统，重点恢复多套实现的实际选择、隐含契约、状态所有权与变更影响；面对已经批准的 PRD 和技术设计，重点沿既定契约把完整业务链路做好。
 
-[核心亮点](#核心亮点) · [轻量化设计](#轻量化设计) · [方案对照](#与知名-skill-的设计对照) · [适用场景](#适用场景) · [安装与更新](#安装与更新) · [开始使用](#开始使用) · [方法导航](#渐进加载与职责) · [论文参考](#论文与工程实践参考)
+[核心亮点](#核心亮点) · [轻量化设计](#轻量化设计) · [设计对照](#与知名-skill-的设计对照) · [架构图](#架构与工作机制) · [自我蒸馏](#自我蒸馏与社区共建) · [适用场景](#适用场景) · [安装与使用](#安装与使用) · [方法依据](#方法边界与依据)
 
 ## 核心亮点
 
@@ -50,17 +50,95 @@
 
 **复杂工程的难处，往往藏在流程步骤之间：依据什么定位、在哪里修改、怎样保留其他行为，以及下一次怎样继承这份理解。**
 
-| 设计取向与代表 | 擅长解决的问题 | 在复杂工程中需要继续处理的痛点 | 本 Skill 的具体优势 |
+| 对照方案 | 主要设计取向 | 复杂工程中的衔接问题 | Architecture Thinking 的设计优势 |
 | --- | --- | --- | --- |
-| **开发流程编排** · [Superpowers](https://github.com/obra/superpowers#the-basic-workflow) | 串联需求讨论、计划、工作树、实现、评审和交付 | 已批准设计与历史实现交织时，每一步仍需要判断实际责任、复用条件与兼容边界 | **继承设计后直接进入契约差分。** 从真实实现找行为差距，按证据缺口切换全局与局部，边理解边交付 |
-| **TDD 驱动开发** · [Superpowers](https://github.com/obra/superpowers#philosophy) | 通过失败测试、实现与重构形成反馈循环 | 遗留系统常有多套入口和隐含状态，测试本身的路径与断言也需要语义审查 | **语义追踪决定验证对象。** 先恢复触发条件和状态变化，再复用或补充能区分目标行为的检查 |
-| **文件化任务规划** · [Planning with Files](https://github.com/OthmanAdi/planning-with-files#the-3-file-pattern) | 用计划、发现、进度文件及 hooks 保持任务连续性 | 任务记录提升为长期知识时，还需决定哪些结论持续成立、变化影响哪些判断、重复认识怎样合并 | **系统知识有归属，也有更新关系。** 保存架构、契约与判断前提，新写入者、新版本等变化触发对应回读与归约 |
-| **独立能力集合** · [Anthropic Skills](https://github.com/anthropics/skills#about-this-repository) | 按需加载各领域的指令、脚本和资源，提供丰富的任务能力 | 多种能力共同参与一个长期工程时，还需连接设计、代码事实、当前状态和维护责任 | **在同一工程模型上组合方法。** 任务路由显式加载依赖，各方法共用项目知识入口，认识回到对应正文 |
-| **整段 Prompt 集中组织规则与经验** | 直接表达角色、要求、步骤和案例 | 项目成长后，稳定规则与易变事实混放；加载范围扩大，历史结论与当前判断需要反复辨认 | **指令、方法、事实与状态分层维护。** 任务选择加载范围，事实保留证据，更新落到唯一职责位置 |
+| **[Superpowers](https://github.com/obra/superpowers#the-basic-workflow)** · 开发流程与 [TDD](https://github.com/obra/superpowers#philosophy) | 需求讨论、计划、工作树、测试驱动实现、评审与交付 | 已批准设计与历史实现交织时，需要沿真实入口恢复隐含契约、状态归属及兼容边界；测试也需要核对目标行为路径 | **语义与契约驱动的实施和验证。** 继承设计并对照当前实现，追状态变化与消费者，按实际责任确定修改边界，使必要验证对齐业务链路与关键交接 |
+| **[Planning with Files](https://github.com/OthmanAdi/planning-with-files#the-3-file-pattern)** · 文件化任务规划 | 用计划、发现、进度与 hooks 保持任务连续性 | 任务接续之外，长期系统知识还需要维护事实来源、判断前提及变更影响 | **可演进的系统知识。** 架构、契约与当前状态各有归属；新证据沿依赖更新，归约保留能够改变后继决策的机制区别 |
+| **[Anthropic Skills](https://github.com/anthropics/skills#about-this-repository)** · 能力封装与按需加载 | 封装各领域指令、脚本与参考资料，按需发现能力 | 多种方法共同参与长期工程时，需要连接项目设计、实际实现、当前状态及知识维护责任 | **基于共同系统模型组合方法。** 显式任务路由和方法依赖连接项目知识入口，局部证据持续修订可跨会话继承的解释 |
 
-选择 Architecture Thinking，意味着把 **系统解释、工程决策和知识演进** 放进同一条工作链：任务完成时，留下可继续使用的系统理解；项目变化时，这份理解沿真实依赖继续修订。
+这些设计取向可以组合使用。Architecture Thinking 将**系统解释、工程决策和知识演进**放进同一条工作链，让任务留下可复用的系统理解，并随实际条件变化持续修订。
 
-## 自我蒸馏
+## 架构与工作机制
+
+方法职责、依赖加载、工作区知识和任务执行相互连接。以下依次展示文件入口与三种架构视图。
+
+### 渐进加载与职责
+
+| 入口 | 职责与加载条件 |
+| --- | --- |
+| [SKILL](skills/arch-thinking-skill/SKILL.md) | 接管、公共方法和按需路由 |
+| [AGENTS](AGENTS.md) | 维护本 skill 的职责与原始规则 |
+| [贡献指南](CONTRIBUTING.md) | 使用者选择贡献后，准备 Issue／方法 PR；维护者评审并归约到现有方法 |
+| [工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md) | 从隐含契约、组合解释与归因推导修改边界的完整方法；初始化后由工作区持有 |
+| [任务路由](skills/arch-thinking-skill/references/task-routing.md) | 按任务阶段选择交付策略，按理解缺口切换全局分析、局部取证与实施 |
+| [系统重建](skills/arch-thinking-skill/references/system-reconstruction.md) | 全面梳理、反推 PRD／技术设计或逐模块展开；负责覆盖、细节深度、产品技术映射与完成判据 |
+| [语义追踪](skills/arch-thinking-skill/references/flow-tracing.md) | rg / grep 查询调整与覆盖、真实路径、契约恢复、事实调查与竞争解释取证 |
+| [初始化](skills/arch-thinking-skill/references/initialization.md) | 接入已有文档，补齐结构并恢复真实系统知识 |
+| [知识维护](skills/arch-thinking-skill/references/knowledge-maintenance.md) | 面向人类决策的现状图、证据与覆盖、判断前提回传及保真接续 |
+| [工作区模板](skills/arch-thinking-skill/assets/workspace/README.md) | README、AGENTS、工程思维、ARCHITECTURE、STATE；按实际缺口使用 |
+| [辅助脚本](skills/arch-thinking-skill/scripts/arch_memory.py) | init / impact / check；只执行机械辅助 |
+
+全系统重建组合系统重建、语义追踪与知识维护；局部实施和 Debug 从任务路由进入，遇到真实路径或状态缺口再深入。加载关系如下图。
+
+工程正文保存在工作区，设计可以来自 chat、文档或 issue。现有同职责资产沿用位置，内容依据任务契约、源码与版本核对。默认使用工作区内普通文件；局部任务按影响深入，全系统重建按模块清单逐项展开。
+
+### 图 1：任务如何加载方法
+
+```mermaid
+flowchart TB
+    SK[SKILL 接管与路由] --> TH[工程思维 通用判断]
+    SK --> RT[任务路由 实施与交付]
+    SK --> SR[系统重建 覆盖与深度]
+    SK --> IN[初始化 结构与知识恢复]
+    RT -->|复杂路径或实现选择待核对| TR[语义追踪 实际行为与依据]
+    SR -->|现状依据| TR
+    IN -->|全面梳理| SR
+    SR -->|交付依赖| KM[知识维护 图与正文]
+    TR -->|关系或判断变化| KM
+    IN --> KM
+```
+
+任务决定交付责任，语义追踪恢复实现依据，知识维护承接图与正文。局部任务沿相关关系深入；全面梳理由系统重建补上逐模块覆盖和完成判据。
+
+### 图 2：工作区文档如何互相定位
+
+```mermaid
+flowchart TB
+    EN[README 与 AGENTS 入口] --> AR[ARCHITECTURE 全局总览]
+    EN --> ST[STATE 契约与当前任务]
+    AR --> PD[PRD 页面与业务实体]
+    AR --> TD[技术设计 模块内部机制]
+    PD <-->|同一对象与规则| TD
+    TD --> FL[flows 跨模块交接与恢复]
+    ST -->|当前任务涉及的关系| FL
+```
+
+工作区保存实际项目知识。总览帮助选模块，PRD 与技术设计按业务对象互相定位，flows 展开跨模块身份和恢复；STATE 保存当前契约、差距和下一动作。具体文件由已有项目入口绑定。
+
+### 图 3：调查怎样形成交付
+
+```mermaid
+flowchart TB
+    READ[继承契约 范围与当前状态] --> TASK{任务交付}
+    TASK -->|系统重建| COVER[入口与模块覆盖]
+    TASK -->|实施 Debug 运维| BOUND[行为契约与问题边界]
+    COVER --> MODEL[全局模型指导局部追踪]
+    BOUND --> MODEL
+    MODEL --> FACT{当前路径与关键影响已有依据}
+    FACT -->|关键缺口| MODEL
+    FACT -->|现状重建| DOC[逐模块正文与图 变更走读]
+    FACT -->|实施任务| CHANGE[最小完整修改 契约验证]
+    DOC -->|解释缺口| MODEL
+    CHANGE -->|新分歧| MODEL
+    DOC -->|覆盖与解释成立| DONE[授权交付与接续回写]
+    CHANGE -->|行为与验证成立| DONE
+```
+
+局部证据持续修订模型，模型中的缺口决定下一段追踪。系统重建以覆盖清单和行为解释完成交付；实现任务以目标行为及受影响契约的验证完成交付。
+
+## 自我蒸馏与社区共建
+
+### 自我蒸馏
 
 > 愿每一次求解，都为下一次远行留下一盏灯。
 
@@ -70,7 +148,15 @@
 
 **蒸馏的尺度，是经验还能指导多少真实选择。** 当实践带来重要的方法增量，Agent 可以简短指出贡献候选，帮助你把判断转折提炼成可分享的机制。你决定留在本地，或将脱敏后的经验带回社区。
 
-**真实任务 → 本地蒸馏 → 使用者选择贡献 → Issue／方法 PR → 社区评审与归约 → 共享方法更新。** 项目事实留在自己的工作区，可迁移认识进入共同方法。欢迎沿用这套结构，培育自己的工程判断，并通过[贡献指南](CONTRIBUTING.md)让下一位构建者从更好的起点出发。
+**真实任务 → 本地蒸馏 → 使用者选择贡献 → Issue／方法 PR → 社区评审与归约 → 共享方法更新。** 项目事实留在自己的工作区，可迁移认识进入共同方法。
+
+### 反馈与贡献
+
+**当一次实践改变了你的工程判断，欢迎把这个转折带回社区。**
+
+现象与机制仍有分歧时，用 [Issue](https://github.com/jiale-li-orion/arch-thinking-skill/issues) 一起分析；已有明确的条件、依据和修订方案时，用 [PR](https://github.com/jiale-li-orion/arch-thinking-skill/pulls) 改进对应方法。Agent 可以帮助准备材料，具体公开内容由使用者授权。社区把有效增量归入现有机制，让方法随着实践持续成熟。
+
+准备与评审方法见 [CONTRIBUTING.md](CONTRIBUTING.md)，仓库维护职责见 [AGENTS.md](AGENTS.md)。
 
 ## 适用场景
 
@@ -82,11 +168,13 @@
 | 复用旧逻辑、重构或迁移 | 比较行为契约，追共享状态、旧数据、在途任务及版本共存 | 复用／适配／独立责任的选择，以及可解释的迁移过程 |
 | 新会话接管、长期迭代 | 恢复当前解释、设计约束、真实进展和下一动作 | 可直接继续工作的上下文与证据入口 |
 
-## 安装与更新
+## 安装与使用
+
+### 安装与更新
 
 维护的 Agent 支持范围为 **Codex 与 dsh**。两端共用 [`skills/arch-thinking-skill/`](skills/arch-thinking-skill/) 的正文、参考资料和模板，项目知识保存在目标工作区。基础阅读使用 Agent 的文件与命令工具；辅助脚本使用 Python 3，代码检索优先使用 ripgrep。
 
-### Codex
+#### Codex
 
 使用 [Codex 插件包](.codex-plugin/plugin.json)：
 
@@ -112,7 +200,7 @@ codex plugin add arch-thinking-skill@arch-thinking-skill-marketplace
 
 独立 Skill 安装按其安装位置更新完整目录。更新后开启新会话，让 Agent 读取当前版本。
 
-### dsh
+#### dsh
 
 通过 dsh 的文件系统 Skill 加载器使用同一份 Skill。下面适用于 macOS／Linux shell：
 
@@ -141,7 +229,7 @@ git -C "$HOME/.local/share/agent-skills/arch-thinking-skill" pull --ff-only
 
 dsh 在再次加载 Skill 时读取当前正文；开启新会话可从更新后的正文重新接管。使用复制安装时同步更新整个 Skill 目录。加载规则见 dsh 官方的[目录发现](https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/skill/skill-filesystem/README.md)与[调用方式](https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/skill/tool-skill/README.md)。
 
-## 开始使用
+### 开始使用
 
 在 Codex 中选择该 Skill，或在请求中写明“使用 arch-thinking-skill”；在 dsh 中使用 `/arch-thinking-skill`。随后给出目标、已有材料和授权范围，例如：
 
@@ -163,85 +251,7 @@ dsh 在再次加载 Skill 时读取当前正文；开启新会话可从更新后
 
 同一份工作区知识可由两端继续维护。设计要求、实际实现与运行反馈各自保留依据；Agent 根据当前任务选择读取深度和行动。详细初始化与辅助命令见[初始化与接续](#初始化与接续)。
 
-## 渐进加载与职责
-
-| 入口 | 职责与加载条件 |
-| --- | --- |
-| [SKILL](skills/arch-thinking-skill/SKILL.md) | 接管、公共方法和按需路由 |
-| [AGENTS](AGENTS.md) | 维护本 skill 的职责与原始规则 |
-| [贡献指南](CONTRIBUTING.md) | 使用者选择贡献后，准备 Issue／方法 PR；维护者评审并归约到现有方法 |
-| [工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md) | 从隐含契约、组合解释与归因推导修改边界的完整方法；初始化后由工作区持有 |
-| [任务路由](skills/arch-thinking-skill/references/task-routing.md) | 按任务阶段选择交付策略，按理解缺口切换全局分析、局部取证与实施 |
-| [系统重建](skills/arch-thinking-skill/references/system-reconstruction.md) | 全面梳理、反推 PRD／技术设计或逐模块展开；负责覆盖、细节深度、产品技术映射与完成判据 |
-| [语义追踪](skills/arch-thinking-skill/references/flow-tracing.md) | rg / grep 查询调整与覆盖、真实路径、契约恢复、事实调查与竞争解释取证 |
-| [初始化](skills/arch-thinking-skill/references/initialization.md) | 接入已有文档，补齐结构并恢复真实系统知识 |
-| [知识维护](skills/arch-thinking-skill/references/knowledge-maintenance.md) | 面向人类决策的现状图、证据与覆盖、判断前提回传及保真接续 |
-| [工作区模板](skills/arch-thinking-skill/assets/workspace/README.md) | README、AGENTS、工程思维、ARCHITECTURE、STATE；按实际缺口使用 |
-| [辅助脚本](skills/arch-thinking-skill/scripts/arch_memory.py) | init / impact / check；只执行机械辅助 |
-
-SKILL 入口按任务目标加载方法依赖：全系统现状重建同时加载系统重建、语义追踪和知识维护；工作区知识缺失时再加载初始化。局部实施或 Debug 从任务路由进入，沿实际状态和实现分支加载语义追踪。图与变更影响解释由知识维护承接。旧文档过期的全面接管、反推 PRD／技术设计和逐模块梳理进入系统重建。
-
-工程正文保存在工作区，设计可以来自 chat、文档或 issue。现有同职责资产沿用位置，内容依据任务契约、源码与版本核对。默认使用工作区内普通文件；局部任务按影响深入，全系统重建按模块清单逐项展开。
-
-## 图 1：任务如何加载方法
-
-```mermaid
-flowchart TB
-    SK[SKILL 接管与路由] --> TH[工程思维 通用判断]
-    SK --> RT[任务路由 实施与交付]
-    SK --> SR[系统重建 覆盖与深度]
-    SK --> IN[初始化 结构与知识恢复]
-    RT -->|复杂路径或实现选择待核对| TR[语义追踪 实际行为与依据]
-    SR -->|现状依据| TR
-    IN -->|全面梳理| SR
-    SR -->|交付依赖| KM[知识维护 图与正文]
-    TR -->|关系或判断变化| KM
-    IN --> KM
-    SK -->|发现可迁移增量| KM
-    KM -->|使用者选择贡献| CO[贡献指南 脱敏与授权提交]
-    CO --> RV[社区评审 归约到现有方法]
-    RV --> TH
-```
-
-任务决定交付责任，语义追踪恢复实现依据，知识维护承接图与正文。局部任务沿相关关系深入；全面梳理由系统重建补上逐模块覆盖和完成判据。
-
-## 图 2：工作区文档如何互相定位
-
-```mermaid
-flowchart TB
-    EN[README 与 AGENTS 入口] --> AR[ARCHITECTURE 全局总览]
-    EN --> ST[STATE 契约与当前任务]
-    AR --> PD[PRD 页面与业务实体]
-    AR --> TD[技术设计 模块内部机制]
-    PD <-->|同一对象与规则| TD
-    TD --> FL[flows 跨模块交接与恢复]
-    ST -->|当前任务涉及的关系| FL
-```
-
-工作区保存实际项目知识。总览帮助选模块，PRD 与技术设计按业务对象互相定位，flows 展开跨模块身份和恢复；STATE 保存当前契约、差距和下一动作。具体文件由已有项目入口绑定。
-
-## 图 3：调查怎样形成交付
-
-```mermaid
-flowchart TB
-    READ[继承契约 范围与当前状态] --> TASK{任务交付}
-    TASK -->|系统重建| COVER[入口与模块覆盖]
-    TASK -->|实施 Debug 运维| BOUND[行为契约与问题边界]
-    COVER --> MODEL[全局模型指导局部追踪]
-    BOUND --> MODEL
-    MODEL --> FACT{当前路径与关键影响已有依据}
-    FACT -->|关键缺口| MODEL
-    FACT -->|现状重建| DOC[逐模块正文与图 变更走读]
-    FACT -->|实施任务| CHANGE[最小完整修改 契约验证]
-    DOC -->|解释缺口| MODEL
-    CHANGE -->|新分歧| MODEL
-    DOC -->|覆盖与解释成立| DONE[授权交付与接续回写]
-    CHANGE -->|行为与验证成立| DONE
-```
-
-局部证据持续修订模型，模型中的缺口决定下一段追踪。系统重建以覆盖清单和行为解释完成交付；实现任务以目标行为及受影响契约的验证完成交付。
-
-## 初始化与接续
+### 初始化与接续
 
 用户明确要求初始化，或长期维护、跨模块任务缺少可接续的系统知识时，读取[初始化流程](skills/arch-thinking-skill/references/initialization.md)。脚本补缺文件，Agent 继续填写真实系统图、任务契约、实现差距、证据和下一动作：
 
@@ -255,13 +265,15 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 全面梳理同时加载[系统重建](skills/arch-thinking-skill/references/system-reconstruction.md)。ARCHITECTURE 承担简洁总览，PRD 按页面和实体解释业务，技术设计逐模块建图并展开内部状态与分支，flows 解释跨模块交接和恢复。职责可复用已有章节；完成标准是覆盖约定模块，并能沿正文推演行为和变更影响。
 
-## 方法边界
+## 方法边界与依据
+
+### 方法边界
 
 系统理解由真实契约、生产消费、存储计算通信、状态生命周期、复用与交付共同约束。长期知识归并保留后续需求、故障与迁移仍会用到的机制区别；当前任务的过程由任务记录和 Git 承接。六条工程判断规则保存在[工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md#六条工程判断规则原文保留)。
 
 相关机制参照：[Go pipelines](https://go.dev/blog/pipelines)解释生产者退出与资源释放；[Tokio channels](https://tokio.rs/tokio/tutorial/channels)区分交接与完成；[Google code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)结合整体设计、真实行为和变更上下文审查。具体项目按其语言、运行时和接口语义应用。
 
-## 论文与工程实践参考
+### 论文与工程实践参考
 
 下列工作支撑搜索、归因、上下文组织与验证策略；[语义追踪](skills/arch-thinking-skill/references/flow-tracing.md#方法依据与迁移范围)展开其方法依据与应用条件。
 
@@ -280,22 +292,10 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 | Anthropic，2025，[Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Context retrieval and agentic search：按需读取的工程实践 | 稳定指引与即时检索协作，保持渐进加载 |
 | [ripgrep 官方指南](https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md) | 自动过滤、路径范围、字面匹配与输出选项 | 准确解释搜索覆盖、空结果与截断 |
 
-## 反馈与贡献
-
-**当一次实践改变了你的工程判断，欢迎把这个转折带回社区。**
-
-现象与机制仍有分歧时，用 [Issue](https://github.com/jiale-li-orion/arch-thinking-skill/issues) 一起分析；已有明确的条件、依据和修订方案时，用 [PR](https://github.com/jiale-li-orion/arch-thinking-skill/pulls) 改进对应方法。Agent 可以帮助准备材料，具体公开内容由使用者授权。社区把有效增量归入现有机制，让方法随着实践持续成熟。
-
-准备与评审方法见 [CONTRIBUTING.md](CONTRIBUTING.md)，仓库维护职责见 [AGENTS.md](AGENTS.md)。
-
-## 支持开源与传播
+## 支持开源与许可
 
 如果这套方法帮助你看清了一个系统、找准了一处修复，或让新的会话顺利接续，欢迎为项目点一颗 [Star](https://github.com/jiale-li-orion/arch-thinking-skill/stargazers)，把它分享给一起构建软件的伙伴。
 
-也欢迎 Fork、改进并分享你的使用方式：一次脱敏的工程复盘、一条更准确的判断方法、一份更清楚的图与说明，都能成为共同资产。引用和传播时保留项目链接，代码与资料按 [MIT License](LICENSE) 使用。
+欢迎 Fork 与分享使用方式，引用和传播时保留项目链接；代码与资料按 [MIT License](LICENSE) 使用。
 
 愿个人的经验，经由开源成为彼此的灯火；愿每一位构建者，都能留下自己的方法。
-
-## 许可
-
-[MIT License](LICENSE)。
