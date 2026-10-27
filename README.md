@@ -17,17 +17,19 @@
 
 ## 核心亮点
 
-| 能力 | Agent 具体怎样工作 | 你能够得到什么 |
-| --- | --- | --- |
-| **全局理解 ↔ 局部追踪** | 从入口、职责、状态归属选择搜索方向；读到新写入者、旁路或配置分支后修正系统模型 | 能解释当前行为、指导下一处修改的架构理解 |
-| **从代码恢复隐含契约** | 对照调用方的使用方式、实现的前提和消费者的依赖，追同一业务对象的状态与生命周期 | 散落在多个模块里的责任与约束，以及复用、适配的依据 |
-| **归因与修改边界一起推导** | 连接触发条件、实际路径、状态变化与用户观察；比较会导致不同修复选择的机制 | 原因解释、区分证据和最小完整修改的范围 |
-| **给人类可追溯的系统现状** | 架构图、模块图、时序和状态图链接源码与配置，关键关系标明运行条件和依据 | 能沿图追问、检查影响并作出决策的系统说明 |
-| **Skill 与工作区记忆一体** | 用 README／AGENTS 绑定入口，ARCHITECTURE 保存系统解释，STATE 保存当前契约与下一动作 | 上下文压缩或换会话后可以继续使用的项目知识 |
-| **高保真更新知识** | 保留关键判断的成立条件、证据和后继事件区别；新写入者或部署变化触发相关判断回读 | 能继续指导后续需求、故障和迁移的记忆 |
-| **语义优先的有效验证** | 先解释代码行为，再按实际架构、模块交接和状态转换选择验证；复用有效的现有检查 | 与真实契约相对应的验证依据和明确交付状态 |
+**把代码读成系统，把证据变成判断，把一次任务留下的理解变成下一次工作的起点。**
 
-日常工具是 **rg／grep、源码、Git、普通 Markdown 和必要的运行观测**。入口保持简洁，具体方法随任务渐进加载；图与详细文档按实际理解和接续需要维护。完整判断方法见[工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md)。
+| 工程中的真实困难 | Architecture Thinking 怎样处理 | 留下的能力 |
+| --- | --- | --- |
+| 同名实现散布多处，Agent 在相似代码间反复兜圈 | 由全局职责选择入口，沿注册、配置、调用和状态读写确认实际路径；局部发现回传系统图 | **全局理解 ↔ 局部追踪**：知道从哪里查，也知道证据会改变哪部分系统认识 |
+| 复用旧逻辑牵动上下游，另写一套又增加状态与调用分支 | 从调用方、实现与消费者恢复隐含契约，比较复用、适配和独立责任的条件 | **有依据的复用与修改边界**：保留合法业务差异，修复覆盖必要责任 |
+| 同一个错误结果，可能来自旧值提交、后续覆盖或副本读取 | 为竞争解释找预测分化的边界，追同一对象的身份、版本和交接，再选择修复位置 | **可区分的机制归因**：每次取证都服务下一项工程决定 |
+| 测试通过，用户仍在另一条入口、配置或恢复路径遇到故障 | 先解释真实链路，再使验证对齐受影响模块、状态转换和用户行为 | **与架构同构的验证**：检查实际契约和关键交接 |
+| 人类面对庞大代码库，评审依赖 Agent 的口头结论 | 图中标出实际实现、状态所有者、关键分支及证据入口；正文展开条件与后果 | **可追溯的决策视图**：人类能沿图检查依据、理解影响、选择方案 |
+| 新会话反复读仓库，旧总结逐渐偏离当前实现 | 工作区保存系统解释与当前任务；新证据修订权威正文，并沿依赖更新图和入口 | **可更新的长期记忆**：接管后恢复当前判断及其依据 |
+| 经验越积越多，关键区别在概括与压缩中逐渐模糊 | 合并重复解释，同时保留成立条件、因果机制和后继事件的处理区别 | **高保真归约**：精简后的知识仍能指导新的需求、故障与迁移 |
+
+日常工具是 **rg／grep、源码、Git、普通 Markdown 和必要的运行观测**。完整判断方法见[工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md)。
 
 ## 轻量化设计
 
@@ -37,7 +39,7 @@
 
 整段 Prompt 可以直接表达一组要求。随着任务与项目成长，规则、案例、历史结论和执行状态各有自己的适用范围与更新节奏。本 Skill 将这些职责显式拆开，使每次加载都有来由，每次修改都有归属。
 
-| 设计机制 | 在这里怎样实现 | 对工程工作的价值 |
+| 设计机制 | 实现方式 | 对工程工作的价值 |
 | --- | --- | --- |
 | **显式依赖注入** | `SKILL.md` 声明任务需要的方法；项目入口绑定真实设计、架构和状态。Agent 沿这些依赖读取内容 | 通用方法与项目上下文在任务处组合，已有设计与当地规则持续生效 |
 | **渐进式加载** | 先发现名称与描述，再读取入口，随后加载相关参考章节及源码 | 上下文围绕当前判断展开，细节保留按需下钻的位置 |
@@ -45,19 +47,21 @@
 | **按任务与理解缺口路由** | 实施、系统重建、Debug、迁移和交付各有操作策略；全局与局部之间随证据缺口切换 | 调查范围和文档深度服务实际任务，理解形成依据后进入行动 |
 | **回写与归约** | 新证据修订对应权威正文，再沿依赖更新图与入口；合并时保留成立条件、因果机制和后继事件区别 | 当前知识保持可继承，积累的经验继续参与后续决策 |
 
-这里的依赖注入由宿主的 Skill 发现与 Agent 的显式读取共同完成。运行基础是现有 Agent、文件系统、Git 与命令工具，辅助脚本承担初始化和引用检查。**轻量体现在运行依赖、加载范围与维护成本；方法的深度来自可追踪的语义和证据。**
+依赖注入由宿主的 Skill 发现与 Agent 的显式读取共同完成。运行基础是现有 Agent、文件系统、Git 与命令工具，辅助脚本承担初始化和引用检查。**轻量体现在运行依赖、加载范围与维护成本；方法的深度来自可追踪的语义和证据。**
 
 ## 与知名 Skill 的设计对照
 
-以下依据 2026-10-27 查阅的公开 README，比较各项目的设计重心与适用取向。链接指向各自说明，读者可以沿原文判断选择。
+**复杂工程的难处，往往藏在流程步骤之间：依据什么定位、在哪里修改、怎样保留其他行为，以及下一次怎样继承这份理解。**
 
-| 项目 | 公开设计的重心 | Architecture Thinking 的取向与优势 |
-| --- | --- | --- |
-| [Superpowers](https://github.com/obra/superpowers#the-basic-workflow) | 将需求讨论、计划、工作树、TDD、评审和分支交付组织成开发流程，提供多 Agent 平台适配 | **围绕已有系统和设计形成工程判断。** 按批准设计直接接续，沿真实语义决定复用与修改位置；验证围绕契约和受影响架构选择，调查与实施随理解往返 |
-| [Planning with Files](https://github.com/OthmanAdi/planning-with-files#the-3-file-pattern) | 用计划、发现、进度三类文件保持任务连续性，通过宿主 hooks 恢复计划上下文；有长期价值的内容提升到项目资产 | **让长期系统知识持续参与任务。** 架构关系、隐含契约、归因依据和判断前提分别维护；反馈原位修订对应解释，归约保留下一次变更仍会用到的区别 |
-| [Anthropic Skills](https://github.com/anthropics/skills#about-this-repository) | 提供覆盖文档、设计、开发等领域的独立 Skill、脚本、资源与创作示例 | **围绕软件系统形成连贯的方法体系。** 将工程思维、任务路由、语义追踪、现状重建与知识维护连接为一条可接续的工作链 |
+| 设计取向与代表 | 擅长解决的问题 | 在复杂工程中需要继续处理的痛点 | 本 Skill 的具体优势 |
+| --- | --- | --- | --- |
+| **开发流程编排** · [Superpowers](https://github.com/obra/superpowers#the-basic-workflow) | 串联需求讨论、计划、工作树、实现、评审和交付 | 已批准设计与历史实现交织时，每一步仍需要判断实际责任、复用条件与兼容边界 | **继承设计后直接进入契约差分。** 从真实实现找行为差距，按证据缺口切换全局与局部，边理解边交付 |
+| **TDD 驱动开发** · [Superpowers](https://github.com/obra/superpowers#philosophy) | 通过失败测试、实现与重构形成反馈循环 | 遗留系统常有多套入口和隐含状态，测试本身的路径与断言也需要语义审查 | **语义追踪决定验证对象。** 先恢复触发条件和状态变化，再复用或补充能区分目标行为的检查 |
+| **文件化任务规划** · [Planning with Files](https://github.com/OthmanAdi/planning-with-files#the-3-file-pattern) | 用计划、发现、进度文件及 hooks 保持任务连续性 | 任务记录提升为长期知识时，还需决定哪些结论持续成立、变化影响哪些判断、重复认识怎样合并 | **系统知识有归属，也有更新关系。** 保存架构、契约与判断前提，新写入者、新版本等变化触发对应回读与归约 |
+| **独立能力集合** · [Anthropic Skills](https://github.com/anthropics/skills#about-this-repository) | 按需加载各领域的指令、脚本和资源，提供丰富的任务能力 | 多种能力共同参与一个长期工程时，还需连接设计、代码事实、当前状态和维护责任 | **在同一工程模型上组合方法。** 任务路由显式加载依赖，各方法共用项目知识入口，认识回到对应正文 |
+| **整段 Prompt 集中组织规则与经验** | 直接表达角色、要求、步骤和案例 | 项目成长后，稳定规则与易变事实混放；加载范围扩大，历史结论与当前判断需要反复辨认 | **指令、方法、事实与状态分层维护。** 任务选择加载范围，事实保留证据，更新落到唯一职责位置 |
 
-**本项目的优势集中在“理解如何成为行动依据，行动如何留下可继承的理解”。** 对已有设计、复杂实现和长期维护交织的仓库，Agent 既能说明当前任务该怎么做，也能保留下一次判断为什么这样做的依据。这里比较的是方法与组织机制；实际收益由目标仓库中的行为正确性、修改边界和接续质量来衡量。
+选择 Architecture Thinking，意味着把 **系统解释、工程决策和知识演进** 放进同一条工作链：任务完成时，留下可继续使用的系统理解；项目变化时，这份理解沿真实依赖继续修订。
 
 ## 在 AI Native 时代，自我蒸馏
 
@@ -187,7 +191,7 @@ flowchart TB
     SK --> RT[任务路由 实施与交付]
     SK --> SR[系统重建 覆盖与深度]
     SK --> IN[初始化 结构与知识恢复]
-    RT -->|复杂路径或实际选择不明| TR[语义追踪 实际行为与依据]
+    RT -->|复杂路径或实现选择待核对| TR[语义追踪 实际行为与依据]
     SR -->|现状依据| TR
     IN -->|全面梳理| SR
     SR -->|交付依赖| KM[知识维护 图与正文]
@@ -245,7 +249,7 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 已有其他文档位置时指定 `--memory-root`。旧版 `.arch/` 的接续规则见初始化流程。图谱服务与检索插件属于可选外部能力；本 skill 的完整工作路径使用文档、rg、源码、Git 和必要的运行证据。
 
-全面梳理同时加载[系统重建](skills/arch-thinking-skill/references/system-reconstruction.md)。ARCHITECTURE 承担简洁总览，PRD 按页面和实体解释业务，技术设计逐模块建图并展开内部状态与分支，flows 解释跨模块交接和恢复。职责可复用已有章节；完成标准是覆盖约定模块，并能沿正文推演行为和变更影响。用户认可的文档样本用于校准这些解释责任。
+全面梳理同时加载[系统重建](skills/arch-thinking-skill/references/system-reconstruction.md)。ARCHITECTURE 承担简洁总览，PRD 按页面和实体解释业务，技术设计逐模块建图并展开内部状态与分支，flows 解释跨模块交接和恢复。职责可复用已有章节；完成标准是覆盖约定模块，并能沿正文推演行为和变更影响。
 
 ## 方法边界
 
@@ -255,18 +259,14 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 ## 论文与工程实践参考
 
-参考材料按其实际研究范围使用。论文提供观察、方法与实验依据，本 skill 将相关认识转化为工程操作；具体证据范围见[语义追踪的方法依据](skills/arch-thinking-skill/references/flow-tracing.md#方法依据与迁移范围)。
-
-近期材料按首次公开时间与发表身份分别标注；操作细节留在对应正文。
+下列工作支撑搜索、归因、上下文组织与验证策略；[语义追踪](skills/arch-thinking-skill/references/flow-tracing.md#方法依据与迁移范围)展开其方法依据与应用条件。
 
 | 近期来源 | 吸收的工程判断 | 正文位置 |
 | --- | --- | --- |
-| [Teaching Agents to Code Reliably](https://arxiv.org/abs/2610.03984)，2026-10-02，预印本 | 检查验证能否区分目标行为，分别解释补丁、测试和环境带来的反馈 | [验证与交付](skills/arch-thinking-skill/references/task-routing.md#验证与交付) |
+| [Teaching Agents to Code Reliably](https://arxiv.org/abs/2610.03984)，2026-10-02，预印本 | 检查验证对目标行为的区分能力，分别解释补丁、测试和环境带来的反馈 | [验证与交付](skills/arch-thinking-skill/references/task-routing.md#验证与交付) |
 | [SemNav](https://arxiv.org/abs/2609.31176)，2026-09-25，预印本 | 候选保留源码依据，任务关联随证据修订 | [候选与证据](skills/arch-thinking-skill/references/flow-tracing.md#将候选变成可用证据) |
 | [CodeGrep](https://arxiv.org/abs/2608.05886)，2026-08-06，预印本 | 探索候选与后续修复证据分别组织，按消费方式选择信息形状 | [候选与证据](skills/arch-thinking-skill/references/flow-tracing.md#将候选变成可用证据) |
 | [LLM Agents Can See Code Repositories / SeeRepo](https://arxiv.org/abs/2606.14061)，2026-06 首发，[ASE 2026](https://conf.researchr.org/details/ase-2026/ase-2026-research-track/33/LLM-Agents-Can-See-Code-Repositories)（10 月） | 以当前问题选择图的范围，结构导航与精确源码协作 | [从证据生成图](skills/arch-thinking-skill/references/knowledge-maintenance.md#从证据生成图) |
-
-以下保留较早的方法基础与工具实践；会议年份和稿件首发年份分别理解。
 
 | 来源 | 重点阅读 | 对应 Skill 能力 |
 | --- | --- | --- |
@@ -276,15 +276,11 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 | Anthropic，2025，[Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Context retrieval and agentic search：按需读取的工程实践 | 稳定指引与即时检索协作，保持渐进加载 |
 | [ripgrep 官方指南](https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md) | 自动过滤、路径范围、字面匹配与输出选项 | 准确解释搜索覆盖、空结果与截断 |
 
-后续吸收材料时，先判断它改变了哪项工程选择，再修订对应权威正文。来源、证据范围和迁移动作一起保留；方法效果结合目标仓库的真实任务继续校正。
-
 ## 反馈与贡献
 
 欢迎提交真实任务中的改进：[Issues](https://github.com/jiale-li-orion/arch-thinking-skill/issues) · [Pull requests](https://github.com/jiale-li-orion/arch-thinking-skill/pulls)。说明任务阶段、Agent 实际读取的内容、判断在哪一步偏离，以及建议怎样改变工程选择；提交前脱敏源码、日志和环境信息。
 
 方法修改沿对应权威正文进行，入口和 README 维护导航。保留机制、适用条件及证据，按变更涉及的语义与行为验证。仓库维护规则见 [AGENTS.md](AGENTS.md)。
-
-首页的信息组织参考 [Superpowers](https://github.com/obra/superpowers) 的工作方式与分平台安装呈现，以及 [Anthropic Skills](https://github.com/anthropics/skills) 的独立 Skill 结构与使用示例。工程方法由本仓库的工程思维和参考文档承接。
 
 ## 支持开源与传播
 
@@ -296,4 +292,4 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 
 ## 许可
 
-[MIT License](LICENSE)。发布内容由 Git 跟踪，安装资源位于 `skills/arch-thinking-skill/`，本地归档由 `.gitignore` 排除。
+[MIT License](LICENSE)。
