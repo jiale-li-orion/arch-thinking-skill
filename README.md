@@ -2,7 +2,7 @@
 
 面向软件系统的理解、实现与演进。全局架构指导局部语义追踪，代码和运行反馈修正系统模型；阶段策略完成当前任务，工作区文档使理解能够持续接续。
 
-适用于按批准设计实施、功能迭代、Debug、重构、PR 和运维。大型遗留库是其中一个深入场景：需要辨认多套实现、恢复隐含契约、平衡复用与新逻辑并把握修复边界。
+适用于全系统现状梳理、PRD 与技术设计重建、按批准设计实施、功能迭代、Debug、重构、PR 和运维。大型遗留库需要辨认多套实现、恢复隐含契约、解释跨模块恢复并把握修改边界。
 
 ## 安装到 Codex
 
@@ -25,63 +25,70 @@ codex plugin add arch-thinking-skill@arch-thinking-skill-marketplace
 | [AGENTS](AGENTS.md) | 维护本 skill 的职责与原始规则 |
 | [工程思维](skills/arch-thinking-skill/assets/workspace/工程思维.md) | 从隐含契约、组合解释与归因推导修改边界的完整方法；初始化后由工作区持有 |
 | [任务路由](skills/arch-thinking-skill/references/task-routing.md) | 按任务阶段选择交付策略，按理解缺口切换全局分析、局部取证与实施 |
+| [系统重建](skills/arch-thinking-skill/references/system-reconstruction.md) | 全面梳理、反推 PRD／技术设计或逐模块展开；负责覆盖、细节深度、产品技术映射与完成判据 |
 | [语义追踪](skills/arch-thinking-skill/references/flow-tracing.md) | rg / grep 查询调整与覆盖、真实路径、契约恢复、事实调查与竞争解释取证 |
 | [初始化](skills/arch-thinking-skill/references/initialization.md) | 接入已有文档，补齐结构并恢复真实系统知识 |
 | [知识维护](skills/arch-thinking-skill/references/knowledge-maintenance.md) | 面向人类决策的现状图、证据与覆盖、判断前提回传及保真接续 |
 | [工作区模板](skills/arch-thinking-skill/assets/workspace/README.md) | README、AGENTS、工程思维、ARCHITECTURE、STATE；按实际缺口使用 |
 | [辅助脚本](skills/arch-thinking-skill/scripts/arch_memory.py) | init / impact / check；只执行机械辅助 |
 
-工程正文保存在工作区，设计可以来自 chat、文档或 issue。现有同职责资产直接继承，源码和 Git 提供具体证据与历史。默认使用工作区内普通文件，复杂模块和链路按需展开。
+SKILL 入口按任务目标加载方法依赖：全系统现状重建同时加载系统重建、语义追踪和知识维护；工作区知识缺失时再加载初始化。局部实施或 Debug 从任务路由进入，沿实际状态和实现分支加载语义追踪。图与变更影响解释由知识维护承接。旧文档过期的全面接管、反推 PRD／技术设计和逐模块梳理进入系统重建。
 
-## 图 1：Skill 与工作区如何衔接
+工程正文保存在工作区，设计可以来自 chat、文档或 issue。现有同职责资产沿用位置，内容依据任务契约、源码与版本核对。默认使用工作区内普通文件；局部任务按影响深入，全系统重建按模块清单逐项展开。
+
+## 图 1：任务如何加载方法
 
 ```mermaid
 flowchart TB
-    SK[SKILL 接管与路由] --> EN[项目 README 与 AGENTS]
-    EN --> AR[ARCHITECTURE 简洁全局]
-    EN --> ST[STATE 契约与任务]
-    SK --> TH[工程思维 通用判断]
-    SK --> RT[任务路由 按阶段选择]
-    RT --> TR[语义追踪 按需深入]
+    SK[SKILL 接管与路由] --> TH[工程思维 通用判断]
+    SK --> RT[任务路由 实施与交付]
+    SK --> SR[系统重建 覆盖与深度]
     SK --> IN[初始化 结构与知识恢复]
-    IN --> TM[工作区模板]
-    TM --> EN
-    IN --> AR
-    IN --> ST
-    AR <--> FL[模块与行为视图 条件与证据]
-    ST --> FL
-    TR --> FL
-    SK --> KM[知识维护]
-    KM --> AR
-    KM --> ST
-    KM --> FL
+    RT -->|复杂路径或实际选择不明| TR[语义追踪 实际行为与依据]
+    SR -->|现状依据| TR
+    IN -->|全面梳理| SR
+    SR -->|交付依赖| KM[知识维护 图与正文]
+    TR -->|关系或判断变化| KM
+    IN --> KM
 ```
 
-方法、策略、项目知识和机械工具分别维护。入口保持短，所需细节沿实际任务加载。
+任务决定交付责任，语义追踪恢复实现依据，知识维护承接图与正文。局部任务沿相关关系深入；全面梳理由系统重建补上逐模块覆盖和完成判据。
 
-## 图 2：行动与理解共同迭代
+## 图 2：工作区文档如何互相定位
 
 ```mermaid
-flowchart TD
-    START[接管或上下文恢复] --> READ[入口 规则 全局架构 当前状态]
-    READ --> READY{接续知识的就绪状态}
-    READY -->|需要补充| INIT[恢复设计 源码 配置与运行事实]
-    INIT --> READ
-    READY -->|能够行动| TASK[选择任务策略与相关系统条件]
-    TASK --> GLOBAL[定位职责 状态归属 实现选择及约束]
-    GLOBAL --> LOCAL[rg 定位与局部语义追踪]
-    LOCAL --> IMPACT[恢复契约 机制归因 判断修改边界]
-    IMPACT -->|分歧影响修改选择| LOCAL
-    IMPACT --> CHANGE[完成最小完整修改]
-    CHANGE --> VERIFY[依据契约与机制选择有效验证]
-    VERIFY -->|反馈需要解释| LOCAL
-    VERIFY -->|满足验收| DELIVER[完成授权范围内交付]
-    LOCAL -->|关系或判断前提变化| UPDATE[更新全局与局部视图 依据及影响]
-    UPDATE --> GLOBAL
-    DELIVER --> STATE[更新当前接续与实际交付状态]
+flowchart TB
+    EN[README 与 AGENTS 入口] --> AR[ARCHITECTURE 全局总览]
+    EN --> ST[STATE 契约与当前任务]
+    AR --> PD[PRD 页面与业务实体]
+    AR --> TD[技术设计 模块内部机制]
+    PD <-->|同一对象与规则| TD
+    TD --> FL[flows 跨模块交接与恢复]
+    ST -->|当前任务涉及的关系| FL
 ```
 
-调查与实施可以往返，文档更新由有价值的关系变化触发。新系统沿设计建立实现；成熟系统按任务复用；遗留库在实际路径与兼容关系清楚后确定修改范围。
+工作区保存实际项目知识。总览帮助选模块，PRD 与技术设计按业务对象互相定位，flows 展开跨模块身份和恢复；STATE 保存当前契约、差距和下一动作。具体文件由已有项目入口绑定。
+
+## 图 3：调查怎样形成交付
+
+```mermaid
+flowchart TB
+    READ[继承契约 范围与当前状态] --> TASK{任务交付}
+    TASK -->|系统重建| COVER[入口与模块覆盖]
+    TASK -->|实施 Debug 运维| BOUND[行为契约与问题边界]
+    COVER --> MODEL[全局模型指导局部追踪]
+    BOUND --> MODEL
+    MODEL --> FACT{当前路径与关键影响已有依据}
+    FACT -->|关键缺口| MODEL
+    FACT -->|现状重建| DOC[逐模块正文与图 变更走读]
+    FACT -->|实施任务| CHANGE[最小完整修改 契约验证]
+    DOC -->|解释缺口| MODEL
+    CHANGE -->|新分歧| MODEL
+    DOC -->|覆盖与解释成立| DONE[授权交付与接续回写]
+    CHANGE -->|行为与验证成立| DONE
+```
+
+局部证据持续修订模型，模型中的缺口决定下一段追踪。系统重建以覆盖清单和行为解释完成交付；实现任务以目标行为及受影响契约的验证完成交付。
 
 ## 初始化与接续
 
@@ -92,6 +99,8 @@ python3 skills/arch-thinking-skill/scripts/arch_memory.py init --root /path/to/r
 ```
 
 已有其他文档位置时指定 `--memory-root`。旧版 `.arch/` 的接续规则见初始化流程。图谱服务与检索插件属于可选外部能力；本 skill 的完整工作路径使用文档、rg、源码、Git 和必要的运行证据。
+
+全面梳理同时加载[系统重建](skills/arch-thinking-skill/references/system-reconstruction.md)。ARCHITECTURE 承担简洁总览，PRD 按页面和实体解释业务，技术设计逐模块建图并展开内部状态与分支，flows 解释跨模块交接和恢复。职责可复用已有章节；完成标准是覆盖约定模块，并能沿正文推演行为和变更影响。用户认可的文档样本用于校准这些解释责任。
 
 ## 方法边界
 

@@ -1,7 +1,7 @@
 {
   "name": "arch-thinking-skill",
-  "version": "0.1.0",
-  "description": "Understand, implement, debug, and evolve software systems with source-backed architecture memory.",
+  "version": "0.2.0",
+  "description": "Reconstruct legacy systems from code and maintain source-backed architecture understanding for implementation and debugging.",
   "author": {
     "name": "jiale-li-orion",
     "url": "https://github.com/jiale-li-orion"
@@ -12,7 +12,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Architecture Thinking",
-    "shortDescription": "Software architecture reasoning and workspace memory",
+    "shortDescription": "Code-based PRD, technical design, and architecture memory",
     "developerName": "jiale-li-orion",
     "category": "Productivity"
   }
